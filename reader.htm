@@ -1,18 +1,53 @@
-<h1>Ozobot Code Reader</h1>
-<p>Align center patch of pixels in the video frame with the "loading" area in OzoBlockly. The "Flash Code" colors are Red (R), Green (G), Blue (B), Cyan (C), Magenta (M), Yellow (Y), Black (K) and White (W), displayed below.</p>
-<video id="video" style="display: none" width="640" height="480" autoplay></video>
-<canvas id="canvas" width="640" height="480"></canvas>
-<br />
-<button id="start">Start</button>
-<button id="stop">Stop</button>
-<input id="code" type="text" style="width: 1000px" value="CRYCYMCRWKWRKWYBGRKWKWRWKCYKMRYKWKGCKBGYRBKWKYWCYCGCM" />
-<button id="play">Play</button>
-<h3 id="confidence"></h3>
-<h4 id="debug"></h4>
-<hr />
-<script>
+<html>
+  <head>
+    <title>>Ozobot Code Reader</title>
+    <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: sans-serif;
+    }
+    button {
+      background-color: black;
+      color: white;
+    }
+    input {
+      background-color: black;
+      color: white;
+      font-size: 18pt;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>Ozobot Code Reader</h1>
+    <video id="video" style="display: none" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <br />
+    <button id="calibrate">Done Calibrating</button>
+    <button id="calibrate_k">K</button>
+    <button id="calibrate_r">R</button>
+    <button id="calibrate_g">G</button>
+    <button id="calibrate_b">B</button>
+    <button id="calibrate_c">C</button>
+    <button id="calibrate_m">M</button>
+    <button id="calibrate_y">Y</button>
+    <button id="calibrate_w">W</button>
+    <br />
+    <button id="record">Record</button>
+    <input id="code" type="text" style="width: 1000px" value="CRYCYMCRWKWRKWYBGRKWKWRWKCYKMRYKWKGCKBGYRBKWKYWCYCGCM" />
+    <button id="play">Play</button>
+    <h3 id="confidence"></h3>
+    <h4 id="debug"></h4>
+    <hr />
+    <h5 id="log"></h5>
+    <script>
 const WIDTH = 640,
       HEIGHT = 480;
+
+const MAX_UNCERTAINTY = 100;
+const MAX_DISIMILARITY = 80;
+
+const logging = false;
 
 function similarity(r0, g0, b0, r1, g1, b1) {
   // Euclidean distance in RGB space
@@ -23,20 +58,32 @@ function similarity(r0, g0, b0, r1, g1, b1) {
   return Math.sqrt(r * r + g * g + b * b);
 }
 
+let mode = "calibrating";
 let recording = false;
-let playing = false;
 let code = "";
+let log = "";
 let last = '';
+let num = 0;
 
-function updateCode(c, m) {
-  if (recording && !playing && c && m) {
-    if (last != c && m < 50) {
-      code += c;
-      last = c;
+function updateCode(c, m, u) {
+  if (mode == "recording" && c && m && u) {
+    if (last == c) num++; else num = 1;
+    last = c;
+    document.getElementById("log").innerHTML = num;
+    if (num > 2) {
+      if (logging) {
+        log += "<br />" + c + " - Similarity: " + m + " Uncertainty: " + u;
+        document.getElementById("log").innerHTML = log;
+      }
+      if (u < MAX_UNCERTAINTY && m < MAX_DISIMILARITY) {
+        if (code.substr(code.length - 1, 1) != c) {
+          code += c;
+        }
+      }
     }
     document.getElementById("code").value = code;
   }
-  document.getElementById("confidence").innerText = "Uncertainty: " + Math.rOund(m);
+  document.getElementById("confidence").innerText = "Similarity: " + Math.round(m) + " Uncertainty: " + Math.round(u);
 }
 
 var codeIndex = 0;
@@ -54,125 +101,217 @@ function white(context) {
   context.putImageData(frame, 0, 0);
 }
 
-function onTick(context) {
-  if (playing) {
-    if (codeIndex == -1) {
-      codeIndex++;
-      white(context);
-      setTimeout(function () { onTick(context); }, 5000);
-    } else {
-      var code = document.getElementById("code").value;
-      if (codeIndex < code.length) {
-        var c = code[codeIndex++];
-        switch (c)
-        {
-          case 'R': cR = 255; cG =   0; cB =   0; break; // R
-          case 'G': cR =   0; cG = 255; cB =   0; break; // G
-          case 'B': cR =   0; cG =   0; cB = 255; break; // B
-          case 'C': cR =   0, cG = 255, cB = 255; break; // G+B
-          case 'M': cR = 255, cG =   0, cB = 255; break; // R+B
-          case 'Y': cR = 255, cG = 255, cB =   0; break; // R+G
-          case 'W': cR = 255, cG = 255, cB = 255; break; // R+G+B
-          case 'K': cR =   0, cG =   0, cB =   0; break; // None
-        }
-        let frame = context.getImageData(0, 0, WIDTH, HEIGHT);
-        for (let x = 0; x < WIDTH; x++) {
-          for (let y = 0; y < HEIGHT; y++) {
-            let i = (x + y * WIDTH) * 4;
-            frame.data[i + 0] = cR;
-            frame.data[i + 1] = cG;
-            frame.data[i + 2] = cB;
-          }
-        }
-        context.putImageData(frame, 0, 0);
-        setTimeout(function () { onTick(context); }, 50);
-      } else {
-        white(context);
-        playing = false;
-        setTimeout(function () { onTick(context); }, 2000);
-      }
+// calibrated prototype colors (work reasonably well, but need to be calibrated with sample image)
+var kr =   0, kg =   0, kb =   0;
+var rr = 255, rg =   0, rb =   0;
+var gr =   0, gg = 255, gb =   0;
+var br =   0, bg =   0, bb = 255;
+var cr =   0, cg = 255, cb = 255;
+var mr = 255, mg =   0, mb = 255;
+var yr = 255, yg = 255, yb =   0;
+var wr = 255, wg = 255, wb = 255;
+
+function detectColor(frame, x, y, patch, calcUncertainty, paint) {
+  let half = patch / 2;
+  var u = 0;
+  if (calcUncertainty) {
+    // sample corners to detect disagreement (rolling shutter, etc.)
+    var cornerPatch = patch / 3;
+    var halfCorner = cornerPatch / 2;
+    var nw = detectColor(frame, x - half + halfCorner, y - half + halfCorner, cornerPatch, false, false);
+    var ne = detectColor(frame, x + half - halfCorner, y - half + halfCorner, cornerPatch, false, false);
+    var sw = detectColor(frame, x - half + halfCorner, y + half - halfCorner, cornerPatch, false, false);
+    var se = detectColor(frame, x + half - halfCorner, y + half - halfCorner, cornerPatch, false, false);
+    // cross-compare each corner
+    var ab = similarity(nw.r, nw.g, nw.b, ne.r, ne.g, ne.b);
+    var ac = similarity(nw.r, nw.g, nw.b, sw.r, sw.g, sw.b);
+    var ad = similarity(nw.r, nw.g, nw.b, se.r, se.g, se.b);
+    var bc = similarity(ne.r, ne.g, ne.b, sw.r, sw.g, sw.b);
+    var bd = similarity(ne.r, ne.g, ne.b, se.r, se.g, se.b);
+    var cd = similarity(sw.r, sw.g, sw.b, se.r, se.g, se.b);
+    u = ab;
+    if (ac > u) u = ac;
+    if (ad > u) u = ad;
+    if (bc > u) u = bc;
+    if (bd > u) u = bd;
+    if (cd > u) u = cd;
+  }
+
+  // sample patch of pixels
+  let r = 0,
+      g = 0,
+      b = 0;
+  let w = x - half;
+  let e = x + half;
+  let n = y - half;
+  let s = y + half;
+  for (let i = w; i < e; i++) {
+    for (let j = n; j < s; j++) {
+      let k = (i + j * WIDTH) * 4;
+      r += frame.data[k + 0];
+      g += frame.data[k + 1];
+      b += frame.data[k + 2];
     }
-  } else {
-    context.drawImage(video, 0, 0, WIDTH, HEIGHT);
-    let frame = context.getImageData(0, 0, WIDTH, HEIGHT);
+  }
+  // average
+  let count = patch * patch;
+  r /= count;
+  g /= count;
+  b /= count;
 
-    // sample center patch of pixels
-    const PATCH = 48; // pixels in the center
-    const mx = WIDTH / 2;
-    const my = HEIGHT / 2;
-    let r = 0,
-        g = 0,
-        b = 0;
-    for (let x = mx - PATCH; x < mx + PATCH; x++) {
-      for (let y = my - PATCH; y < my + PATCH; y++) {
-        let i = (x + y * WIDTH) * 4;
-        r += frame.data[i + 0];
-        g += frame.data[i + 1];
-        b += frame.data[i + 2];
-      }
-    }
-    const TOTAL_PATCH = (PATCH * 2) * (PATCH * 2);
-    r /= TOTAL_PATCH; // average
-    g /= TOTAL_PATCH;
-    b /= TOTAL_PATCH;
-    document.getElementById('debug').innerHTML = "R: " + Math.round(r) + "G: " + Math.round(g) + "B: " + Math.round(b);
+  // detect color
+  let rSim = similarity(r, g, b, rr, rg, rb); // R
+  let gSim = similarity(r, g, b, gr, gg, gb); // G
+  let bSim = similarity(r, g, b, br, bg, bb); // B
+  let cSim = similarity(r, g, b, cr, cg, cb); // G+B
+  let mSim = similarity(r, g, b, mr, mg, mb); // R+B
+  let ySim = similarity(r, g, b, yr, yg, yb); // R+G
+  let wSim = similarity(r, g, b, wr, wg, wb); // R+G+B
+  let kSim = similarity(r, g, b, kr, kg, kb); // None
 
-    var rr = 140, rg = 32,  rb = 37; // calibrated
-    var gr = 48,  gg = 135, gb = 60;
-    var br = 7,   bg = 1,   bb = 171;
-    var cr = 23,  cg = 164, cb = 169;
-    var mr = 135, mg = 1,   mb = 164;
-    var yr = 130, yg = 120, yb = 38;
-    var wr = 154, wg = 150, wb = 164;
-    var kr = 30,  kg = 30,  kb = 38;
+  let c = '?';
+  let cR = 0;
+  let cG = 0;
+  let cB = 0;
+  let m = 1000000;
+  if (rSim < m) { c = 'R'; m = rSim; cR = 255; cG =   0; cB =   0; } // R
+  if (gSim < m) { c = 'G'; m = gSim; cR =   0; cG = 255; cB =   0; } // G
+  if (bSim < m) { c = 'B'; m = bSim; cR =   0; cG =   0; cB = 255; } // B
+  if (cSim < m) { c = 'C'; m = cSim; cR =   0, cG = 255, cB = 255; } // G+B
+  if (mSim < m) { c = 'M'; m = mSim; cR = 255, cG =   0, cB = 255; } // R+B
+  if (ySim < m) { c = 'Y'; m = ySim; cR = 255, cG = 255, cB =   0; } // R+G
+  if (wSim < m) { c = 'W'; m = wSim; cR = 255, cG = 255, cB = 255; } // R+G+B
+  if (kSim < m) { c = 'K'; m = kSim; cR =   0, cG =   0, cB =   0; } // None
+  if (u > MAX_UNCERTAINTY) {
+    cR = 128; // gray indicator
+    cG = 128;
+    cB = 128;
+  }
 
-    // detect color
-    let rSim = similarity(r, g, b, rr, rg, rb); // R
-    let gSim = similarity(r, g, b, gr, gg, gb); // G
-    let bSim = similarity(r, g, b, br, bg, bb); // B
-    let cSim = similarity(r, g, b, cr, cg, cb); // G+B
-    let mSim = similarity(r, g, b, mr, mg, mb); // R+B
-    let ySim = similarity(r, g, b, yr, yg, yb); // R+G
-    let wSim = similarity(r, g, b, wr, wg, wb); // R+G+B
-    let kSim = similarity(r, g, b, kr, kg, kb); // None
-
-    let c = '?';
-    let cR = 0;
-    let cG = 0;
-    let cB = 0;
-    let m = 1000000;
-    if (rSim < m) { c = 'R'; m = rSim; cR = 255; cG =   0; cB =   0; } // R
-    if (gSim < m) { c = 'G'; m = gSim; cR =   0; cG = 255; cB =   0; } // G
-    if (bSim < m) { c = 'B'; m = bSim; cR =   0; cG =   0; cB = 255; } // B
-    if (cSim < m) { c = 'C'; m = cSim; cR =   0, cG = 255, cB = 255; } // G+B
-    if (mSim < m) { c = 'M'; m = mSim; cR = 255, cG =   0, cB = 255; } // R+B
-    if (ySim < m) { c = 'Y'; m = ySim; cR = 255, cG = 255, cB =   0; } // R+G
-    if (wSim < m) { c = 'W'; m = wSim; cR = 255, cG = 255, cB = 255; } // R+G+B
-    if (kSim < m) { c = 'K'; m = kSim; cR =   0, cG =   0, cB =   0; } // None
-    updateCode(c, m);
-
+  if (paint) {
+    const BOARDER = 4;
     // display detected color
-    for (let x = mx - (PATCH + 4); x < mx + PATCH + 4; x++) {
-      for (let y = my - (PATCH + 4); y < my + PATCH + 4; y++) {
-        let i = (x + y * WIDTH) * 4;
-        frame.data[i + 0] = cR;
-        frame.data[i + 1] = cG;
-        frame.data[i + 2] = cB;
+    for (let h = 0; h < BOARDER; h++) {
+      for (let i = 0; i < patch; i++) {
+        let k = (w + i + (n + h) * WIDTH) * 4;
+        frame.data[k + 0] = cR;
+        frame.data[k + 1] = cG;
+        frame.data[k + 2] = cB;
+        k = (w + i + (s - h - 1) * WIDTH) * 4;
+        frame.data[k + 0] = cR;
+        frame.data[k + 1] = cG;
+        frame.data[k + 2] = cB;
+        k = (w + h + (n + i) * WIDTH) * 4;
+        frame.data[k + 0] = cR;
+        frame.data[k + 1] = cG;
+        frame.data[k + 2] = cB;
+        k = (e - h - 1 + (n + i) * WIDTH) * 4;
+        frame.data[k + 0] = cR;
+        frame.data[k + 1] = cG;
+        frame.data[k + 2] = cB;
       }
     }
 
     // display average patch
-    for (let x = mx - PATCH; x < mx + PATCH; x++) {
-      for (let y = my - PATCH; y < my + PATCH; y++) {
-        let i = (x + y * WIDTH) * 4;
-        frame.data[i + 0] = r;
-        frame.data[i + 1] = g;
-        frame.data[i + 2] = b;
+    for (let i = w + 4; i < e - 4; i++) {
+      for (let j = n + 4; j < s - 4; j++) {
+        let k = (i + j * WIDTH) * 4;
+        frame.data[k + 0] = r;
+        frame.data[k + 1] = g;
+        frame.data[k + 2] = b;
       }
     }
+  }
 
-    context.putImageData(frame, 0, 0);
-    setTimeout(function () { onTick(context); }, 0);
+  return { r: r, g: g, b: b, c: c, m: m, u: u };
+}
+
+function playing(context) {
+  if (codeIndex == -1) {
+    codeIndex++;
+    white(context);
+    setTimeout(function () { onTick(context); }, 3000);
+  } else {
+    var code = document.getElementById("code").value;
+    if (codeIndex < code.length) {
+      var c = code[codeIndex++];
+      switch (c)
+      {
+        case 'R': cR = 255; cG =   0; cB =   0; break; // R
+        case 'G': cR =   0; cG = 255; cB =   0; break; // G
+        case 'B': cR =   0; cG =   0; cB = 255; break; // B
+        case 'C': cR =   0, cG = 255, cB = 255; break; // G+B
+        case 'M': cR = 255, cG =   0, cB = 255; break; // R+B
+        case 'Y': cR = 255, cG = 255, cB =   0; break; // R+G
+        case 'W': cR = 255, cG = 255, cB = 255; break; // R+G+B
+        case 'K': cR =   0, cG =   0, cB =   0; break; // None
+      }
+      let frame = context.getImageData(0, 0, WIDTH, HEIGHT);
+      for (let x = 0; x < WIDTH; x++) {
+        for (let y = 0; y < HEIGHT; y++) {
+          let i = (x + y * WIDTH) * 4;
+          frame.data[i + 0] = cR;
+          frame.data[i + 1] = cG;
+          frame.data[i + 2] = cB;
+        }
+      }
+      context.putImageData(frame, 0, 0);
+      setTimeout(function () { onTick(context); }, 50);
+    } else {
+      white(context);
+      mode = "normal";
+      setTimeout(function () { onTick(context); }, 2000);
+    }
+  }
+}
+
+function calibrating(context) {
+  let frame = context.getImageData(0, 0, WIDTH, HEIGHT);
+  const COL = WIDTH / 4;
+  const ROW = HEIGHT / 2;
+  let k = detectColor(frame, COL / 2, ROW / 2, 32, false, true);
+  let r = detectColor(frame, COL + COL / 2, ROW / 2, 32, false, true);
+  let g = detectColor(frame, 2 * COL + COL / 2, ROW / 2, 32, false, true);
+  let b = detectColor(frame, 3 * COL + COL / 2, ROW / 2, 32, false, true);
+  let c = detectColor(frame, COL / 2, ROW + ROW / 2, 32, false, true);
+  let m = detectColor(frame, COL + COL / 2, ROW + ROW / 2, 32, false, true);
+  let y = detectColor(frame, 2 * COL + COL / 2, ROW + ROW / 2, 32, false, true);
+  let w = detectColor(frame, 3 * COL + COL / 2, ROW + ROW / 2, 32, false, true);
+  kr = k.r; kg = k.g; kb = k.b;
+  rr = r.r; rg = r.g; rb = r.b;
+  gr = g.r; gg = g.g; gb = g.b;
+  br = b.r; bg = b.g; bb = b.b;
+  cr = c.r; cg = c.g; cb = c.b;
+  mr = m.r; mg = m.g; mb = m.b;
+  yr = y.r; yg = y.g; yb = y.b;
+  wr = w.r; wg = w.g; wb = w.b;
+  context.putImageData(frame, 0, 0);
+  setTimeout(function () { onTick(context); }, 0);
+}
+
+var currentDetected = null;
+
+function normal(context) {
+  let frame = context.getImageData(0, 0, WIDTH, HEIGHT);
+  // sample center patch of pixels
+  const mx = WIDTH / 2;
+  const my = HEIGHT / 2;
+  currentDetected = detectColor(frame, mx, my, 96, true, true);
+  var d = currentDetected;
+  document.getElementById('debug').innerHTML = "R: " + Math.round(d.r) + " G: " + Math.round(d.g) + " B: " + Math.round(d.b);
+  updateCode(d.c, d.m, d.u);
+  context.putImageData(frame, 0, 0);
+  setTimeout(function () { onTick(context); }, 0);
+}
+
+function onTick(context) {
+  context.drawImage(video, 0, 0, WIDTH, HEIGHT);
+  switch (mode) {
+    case "playing": return playing(context);
+    case "calibrating": return calibrating(context);
+    case "recording":
+    case "normal": return normal(context);
+    default: alert("Unknown mode: " + mode);
   }
 }
 
@@ -205,21 +344,70 @@ window.addEventListener("DOMContentLoaded", function() {
     }, errBack);
   }
 
-  document.getElementById("start").addEventListener("click", function() {
-    recording = true;
-    code = "";
-    updateCode();
+  document.getElementById("calibrate").addEventListener("click", function() {
+    if (mode == "calibrating") {
+      document.getElementById("calibrate").innerText = "Calibrate";
+      mode = "normal";
+    } else {
+      document.getElementById("calibrate").innerText = "Done";
+      mode = "calibrating";
+    }
   });
 
-  document.getElementById("stop").addEventListener("click", function() {
-    recording = false;
+  document.getElementById("record").addEventListener("click", function() {
+    if (mode == "recording") {
+      mode = "normal";
+      document.getElementById("record").innerText = "Record";
+    } else {
+      mode = "recording";
+      document.getElementById("record").innerText = "Stop";
+      code = "";
+      last = '';
+      num = 0;
+      log = "";
+      document.getElementById("log").innerText = "";
+      updateCode();
+    }
   });
 
   document.getElementById("play").addEventListener("click", function() {
     codeIndex = -1;
-    playing = true;
+    mode = "playing";
+  });
+
+  document.getElementById("calibrate_k").addEventListener("click", function() {
+    kr = currentDetected.r; kg = currentDetected.g; kb = currentDetected.b;
+  });
+
+  document.getElementById("calibrate_r").addEventListener("click", function() {
+    rr = currentDetected.r; rg = currentDetected.g; rb = currentDetected.b;
+  });
+
+  document.getElementById("calibrate_g").addEventListener("click", function() {
+    gr = currentDetected.r; gg = currentDetected.g; gb = currentDetected.b;
+  });
+
+  document.getElementById("calibrate_b").addEventListener("click", function() {
+    br = currentDetected.r; bg = currentDetected.g; bb = currentDetected.b;
+  });
+
+  document.getElementById("calibrate_c").addEventListener("click", function() {
+    cr = currentDetected.r; cg = currentDetected.g; cb = currentDetected.b;
+  });
+
+  document.getElementById("calibrate_m").addEventListener("click", function() {
+    mr = currentDetected.r; mg = currentDetected.g; mb = currentDetected.b;
+  });
+
+  document.getElementById("calibrate_y").addEventListener("click", function() {
+    yr = currentDetected.r; yg = currentDetected.g; yb = currentDetected.b;
+  });
+
+  document.getElementById("calibrate_w").addEventListener("click", function() {
+    wr = currentDetected.r; wg = currentDetected.g; wb = currentDetected.b;
   });
 
   setTimeout(function () { onTick(context); }, 0);
 }, false);
-</script>
+  </script>
+</body>
