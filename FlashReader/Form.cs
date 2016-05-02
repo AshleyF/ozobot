@@ -45,7 +45,7 @@ namespace FlashReader
         private void AddColor(Color c)
         {
             var d = DetectColor(c);
-            Console.WriteLine($"Color: {d}");
+            // Console.WriteLine($"Color: {d}");
             if (d != '?' && d != last)
             {
                 this.textBox.Text += d;
@@ -55,10 +55,17 @@ namespace FlashReader
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            var color = Sample();
-            this.BackColor = Color.FromArgb(255, color);
-            AddColor(color);
-            // Console.WriteLine($"R: {color.R} G: {color.G} B: {color.B}");
+            try
+            {
+                var color = Sample();
+                this.BackColor = Color.FromArgb(255, color);
+                AddColor(color);
+                // Console.WriteLine($"R: {color.R} G: {color.G} B: {color.B}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex}");
+            }
         }
 
         public Form()
