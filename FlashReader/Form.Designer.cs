@@ -31,14 +31,14 @@
             this.components = new System.ComponentModel.Container();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.textBox = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.label = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // timer1
             // 
             this.timer1.Enabled = true;
             this.timer1.Interval = 10;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            this.timer1.Tick += new System.EventHandler(this.timer_Tick);
             // 
             // textBox
             // 
@@ -48,21 +48,21 @@
             this.textBox.TabIndex = 0;
             this.textBox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.textBox_MouseDoubleClick);
             // 
-            // label1
+            // label
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 35);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(104, 13);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Double-click to clear";
+            this.label.AutoSize = true;
+            this.label.Location = new System.Drawing.Point(12, 35);
+            this.label.Name = "label";
+            this.label.Size = new System.Drawing.Size(104, 13);
+            this.label.TabIndex = 1;
+            this.label.Text = "Double-click to clear";
             // 
             // Form
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1008, 57);
-            this.Controls.Add(this.label1);
+            this.ClientSize = new System.Drawing.Size(1008, 100);
+            this.Controls.Add(this.label);
             this.Controls.Add(this.textBox);
             this.Name = "Form";
             this.Text = "Ozobot Flash Reader";
@@ -77,7 +77,7 @@
 
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.TextBox textBox;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label;
     }
 }
 

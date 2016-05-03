@@ -53,12 +53,14 @@ namespace FlashReader
             }
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void timer_Tick(object sender, EventArgs e)
         {
             try
             {
                 var color = Sample();
-                this.BackColor = Color.FromArgb(255, color);
+                BackColor = Color.FromArgb(255, color);
+                var grayScale = (color.R * 0.3) + (color.G * 0.59) + (color.B * 0.11);
+                label.ForeColor = grayScale < 128 ? Color.White : Color.Black; // white on black, red or blue
                 AddColor(color);
                 // Console.WriteLine($"R: {color.R} G: {color.G} B: {color.B}");
             }
