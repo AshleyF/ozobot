@@ -1,2 +1,5 @@
-FlashReader/bin
-FlashReader/obj
+Flash*/bin
+Flash*/obj
+.vs/*
+*/.vs/*
+*.swp
