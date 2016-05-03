@@ -34,6 +34,8 @@ let flash colors =
     colors |> Seq.iter (fun c -> show c; Thread.Sleep 50)
     show White
 
+let savedBG = Console.BackgroundColor
+let savedFG = Console.ForegroundColor
 show White
 Console.ForegroundColor <- toConsoleColor Black
 printfn "Place OzoBot on the screen and press"
@@ -49,3 +51,6 @@ if args.Length > 1 then
 else // no program
     printfn "No program given. Hold Ozobot's power button for 2 seconds and place against white background to calibrate."
     Console.ReadLine() |> ignore
+Console.BackgroundColor <- savedBG
+Console.ForegroundColor <- savedFG
+Console.Clear()
