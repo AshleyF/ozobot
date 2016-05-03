@@ -77,7 +77,8 @@ namespace FlashReader
                     Console.WriteLine($"Test: {txt}");
                     if (txt.Length > 0 && txt[txt.Length - 1] == 'W')
                     {
-                        textBox.Text = txt.Substring(0, txt.Length - 1);
+                        txt = txt.Substring(0, txt.Length - 1);
+                        textBox.Text = txt;
                         Clipboard.SetText(txt);
                     }
                 }
