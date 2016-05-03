@@ -8,17 +8,12 @@ namespace FlashReader
 {
     public partial class Form : System.Windows.Forms.Form
     {
-        [DllImport("user32.dll")]
-        static extern bool GetCursorPos(ref Point lpPoint);
-
-        static Color Sample()
+        private Color Sample()
         {
-            Point cursor = new Point();
-            GetCursorPos(ref cursor);
-
-            var screen = Screen.FromPoint(cursor);
+            var point = PointToScreen(new Point(Width / 2, Height / 2));
+            var screen = Screen.FromPoint(point);
             var bmp = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
-            Graphics.FromImage(bmp).CopyFromScreen(screen.Bounds.X + cursor.X, screen.Bounds.Y + cursor.Y, 0, 0, new Size(1, 1), CopyPixelOperation.SourceCopy);
+            Graphics.FromImage(bmp).CopyFromScreen(screen.Bounds.X + point.X, screen.Bounds.Y + point.Y, 0, 0, new Size(1, 1), CopyPixelOperation.SourceCopy);
 
             return bmp.GetPixel(0, 0);
         }
