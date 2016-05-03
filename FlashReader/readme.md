@@ -1,6 +1,6 @@
 # FlashReader
 
-This is a very simply (Windows, sorry) app to read "flash codes" from the [OzoBlockly](http://ozoblockly.com) site.
+This is a very simple (Windows, sorry) app to read "flash codes" from the [OzoBlockly](http://ozoblockly.com) site.
 
 It works by merely sampling the pixel color under the cursor, logging color changes to one of the (red, green, blue, cyan, magenta, black, white) colors.
 
