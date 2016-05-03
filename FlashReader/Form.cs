@@ -10,7 +10,7 @@ namespace FlashReader
     {
         private Color Sample()
         {
-            var point = PointToScreen(new Point(Width / 2, Height / 2));
+            var point = PointToScreen(new Point(pictureBox.Left + pictureBox.Width / 2, pictureBox.Top + pictureBox.Height / 2));
             var screen = Screen.FromPoint(point);
             var bmp = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
             Graphics.FromImage(bmp).CopyFromScreen(screen.Bounds.X + point.X, screen.Bounds.Y + point.Y, 0, 0, new Size(1, 1), CopyPixelOperation.SourceCopy);
@@ -37,12 +37,25 @@ namespace FlashReader
             return '?';
         }
 
+        private void Clear()
+        {
+            textBox.Clear();
+            last = '\0';
+        }
+
+        private DateTime lastTime = new DateTime();
+
         private void AddColor(Color c)
         {
             var d = DetectColor(c);
             // Console.WriteLine($"Color: {d}");
             if (d != '?' && d != last)
             {
+                var now = DateTime.Now;
+                var ellapsed = (now - lastTime).TotalMilliseconds;
+                // Console.WriteLine($"{ellapsed}"); // seems to be ~50ms
+                lastTime = now;
+                if (last == 'W' && ellapsed > 100) Clear(); // beginning of seqence
                 this.textBox.Text += d;
                 last = d;
             }
@@ -57,7 +70,17 @@ namespace FlashReader
                 var grayScale = (color.R * 0.3) + (color.G * 0.59) + (color.B * 0.11);
                 label.ForeColor = grayScale < 128 ? Color.White : Color.Black; // white on black, red or blue
                 AddColor(color);
-                // Console.WriteLine($"R: {color.R} G: {color.G} B: {color.B}");
+                var ellapsed = (DateTime.Now - lastTime).TotalMilliseconds;
+                if (last == 'W' && ellapsed > 100) // end of sequence
+                {
+                    var txt = textBox.Text;
+                    Console.WriteLine($"Test: {txt}");
+                    if (txt.Length > 0 && txt[txt.Length - 1] == 'W')
+                    {
+                        textBox.Text = txt.Substring(0, txt.Length - 1);
+                        Clipboard.SetText(txt);
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -68,21 +91,6 @@ namespace FlashReader
         public Form()
         {
             InitializeComponent();
-        }
-
-        private void Clear()
-        {
-            textBox.Clear();
-            last = '\0';
-        }
-
-        private void textBox_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            Clear();
-        }
-        private void Form_DoubleClick(object sender, EventArgs e)
-        {
-            Clear();
         }
     }
 }

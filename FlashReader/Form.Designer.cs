@@ -29,9 +29,12 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form));
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.textBox = new System.Windows.Forms.TextBox();
             this.label = new System.Windows.Forms.Label();
+            this.pictureBox = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
             this.SuspendLayout();
             // 
             // timer1
@@ -42,32 +45,45 @@
             // 
             // textBox
             // 
-            this.textBox.Location = new System.Drawing.Point(12, 12);
+            this.textBox.BackColor = System.Drawing.Color.White;
+            this.textBox.Location = new System.Drawing.Point(12, 70);
+            this.textBox.Multiline = true;
             this.textBox.Name = "textBox";
-            this.textBox.Size = new System.Drawing.Size(984, 20);
+            this.textBox.Size = new System.Drawing.Size(497, 44);
             this.textBox.TabIndex = 0;
-            this.textBox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.textBox_MouseDoubleClick);
             // 
             // label
             // 
             this.label.AutoSize = true;
-            this.label.Location = new System.Drawing.Point(12, 35);
+            this.label.Location = new System.Drawing.Point(70, 12);
             this.label.Name = "label";
-            this.label.Size = new System.Drawing.Size(104, 13);
-            this.label.TabIndex = 1;
-            this.label.Text = "Double-click to clear";
+            this.label.Size = new System.Drawing.Size(393, 52);
+            this.label.TabIndex = 2;
+            this.label.Text = resources.GetString("label.Text");
+            // 
+            // pictureBox
+            // 
+            this.pictureBox.BackColor = System.Drawing.Color.Pink;
+            this.pictureBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pictureBox.Location = new System.Drawing.Point(12, 12);
+            this.pictureBox.Name = "pictureBox";
+            this.pictureBox.Size = new System.Drawing.Size(52, 52);
+            this.pictureBox.TabIndex = 3;
+            this.pictureBox.TabStop = false;
             // 
             // Form
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1008, 100);
+            this.ClientSize = new System.Drawing.Size(521, 124);
+            this.Controls.Add(this.pictureBox);
             this.Controls.Add(this.label);
             this.Controls.Add(this.textBox);
             this.Name = "Form";
             this.Text = "Ozobot Flash Reader";
             this.TopMost = true;
-            this.DoubleClick += new System.EventHandler(this.Form_DoubleClick);
+            this.TransparencyKey = System.Drawing.Color.Pink;
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -78,6 +94,7 @@
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.TextBox textBox;
         private System.Windows.Forms.Label label;
+        private System.Windows.Forms.PictureBox pictureBox;
     }
 }
 

@@ -120,4 +120,10 @@
   <metadata name="timer1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <data name="label.Text" xml:space="preserve">
+    <value>This app will read the flash codes being sent to Ozobot.
+Place this window over the OzoBlockly page with the "hole" over the loading pad.
+Sequences are recorded in the textbox below and are also put on the clipboard.
+Red=R, Green=G, Blue=B, Cyan=C, Magenta=M, Yellow=Y, White=W, Black=K</value>
+  </data>
 </root>

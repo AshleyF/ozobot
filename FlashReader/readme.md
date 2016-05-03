@@ -1,7 +1,8 @@
 # FlashReader
 
-This is a very simple (Windows, sorry) app to read "flash codes" from the [OzoBlockly](http://ozoblockly.com) site.
+This is a very simple app to read "flash codes" from the [OzoBlockly](http://ozoblockly.com) site. It has been tested under Windows and on Ubuntu with Mono.
 
-It works by merely sampling the pixel color under the cursor, logging color changes to one of red, green, blue, cyan, magenta, black or white.
+It works by merely sampling the pixel color within a transparent "hole" in the window. Placing this hole over the loading pad in OzoBlockly allows it to read the colors. Colors are logged to a text box and also placed on the clipboard for convenience. The beginning and end of each sequence is detected by transistion from/to white and an ellapsed time of > 100ms (it appears that OzoBlockly uses 50ms "frames", BTW).
 
-To use it, click load in OzoBlockly and quickly double click the FlashReader to clear. You'll see the color sequence accumulate in the text box (K for black, B for blue, by the way). Very simple. Works perfectly, unlike the previous vision-based reader (now in `../archive`) and a Lego color sensor approach.
+Very simple. Works perfectly, unlike the previous vision-based reader (now in `../archive`) and a Lego color sensor approach.
+Some observations are that sequences
