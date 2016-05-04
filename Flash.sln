@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashReader", "FlashReader\
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FlashWriter", "FlashWriter\FlashWriter.fsproj", "{0010FFB8-AEEB-4B9B-918C-776230933D7F}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FlashDasm", "FlashDasm\FlashDasm.fsproj", "{3975B24E-659F-49CF-ACD0-9BE9E2DF5EDF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{0010FFB8-AEEB-4B9B-918C-776230933D7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0010FFB8-AEEB-4B9B-918C-776230933D7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0010FFB8-AEEB-4B9B-918C-776230933D7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3975B24E-659F-49CF-ACD0-9BE9E2DF5EDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3975B24E-659F-49CF-ACD0-9BE9E2DF5EDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3975B24E-659F-49CF-ACD0-9BE9E2DF5EDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3975B24E-659F-49CF-ACD0-9BE9E2DF5EDF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
