@@ -54,9 +54,9 @@ Not fully understood yet, but `ZZ` (perhaps combined with `YY`) appears to be th
 
 #### Checksum
 
-`CK` is a checksum to detect misreading. It is constructed from the whole payload up to the checksum - program bytes and the version bytes (`VV` and `UU`).
+`CK` is a checksum to detect misreading. It is constructed from the whole payload up to the checksum - version, length and program bytes.
 
-After a bit of experimentation, the checksum has been found to be simply a single-byte (underflowed) running difference between the bytes of the program. That is, subtract the second byte from the first, the third from this, and so on; keeping a running value. The result is a (likely underflowed) byte. For example, this payload:
+After a bit of experimentation, the checksum has been found to be simply a single-byte (underflowed) running difference between the bytes of the envelope, starting with zero. That is, subtract the first byte from zero, subtract the second byte from this, the third from that, and so on; keeping a running value. The result is a byte. For example, this payload:
 
     01 03 CE 00 0D C7 2D 24 93 00 00 00 B8 00 1E 93 00 AE
 
