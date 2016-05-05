@@ -25,3 +25,47 @@ By flashing the same program with parameters in increasing values we can glean t
 * 6 110 Cyan (G+B)
 
 White (111) isn't used as a value. Instead it signifies "repeat last color". For example KWK is just 000.
+
+### Framing
+
+Programs are "framed" by:
+
+* `CRY CYM CRW ... TRM`
+
+The first three and the last "word" are CRY CYM CRW and TRM. These decode to values outside of a single byte range (130, 140, 12E and 14E). Everything between however seems to always decode to bytes. We will consider this a "framing" protocol. Just a sequence the robot listens for to switch into "programming" mode.
+
+### Envelope
+
+The bytes within frames appear to be in the form:
+
+* `VV UU XX YY ZZ ... CK`
+
+Giving a version, length and checksum. Bytes within are program instructions.
+
+#### Version?
+
+Where `VV` and `UU` may be a version number? They have been observed to always be 1 and 3 currently.
+
+#### Length
+
+`XX`, `YY` and `ZZ` have to do with the length of the program.
+
+Now fully understood yet, but `ZZ` appears to be the length of the program instructions (up to the checksum). `XX` is, for some reason that's still a mystery, always 219-length. `YY` has only observed to be zero. Perhaps it's the high bits of `ZZ` when programs longer than 255 (`FF`) are sent.
+
+#### Checksum
+
+`CK` is a checksum to detect misreading. It is constructed from the whole payload up to the checksum - program bytes and the version bytes (`VV` and `UU`).
+
+After a bit of experimentation, the checksum has been found to be simply a single-byte (underflowed) running difference between the bytes of the program. That is, subtract the second byte from the first, the third from this, and so on; keeping a running value. The result is a (likely underflowed) byte. For example, this payload:
+
+    01 03 CE 00 0D C7 2D 24 93 00 00 00 B8 00 1E 93 00 AE
+
+Checksums to `5F` (95).
+
+### Instructions
+
+It appears to be a stack machine with operands sent before operations. For example, the instruction to "set LED color" is `B8` and takes three arguments for red, green and blue values. `FF 00 00 B8` sets the LED to red. The "wait N x 10ms" instruction is `9B` and takes a single argument (the number of centiseconds). `64 9B` waits for one second (`64` hex = 100 dec). These can be composed:
+
+    `FF 00 00 B8 64 9B 00 FF 00 B8 64 9B 00 00 FF B8 64 9B`
+
+This program fragment blinks red, then green, then blue, with one-second pauses.
