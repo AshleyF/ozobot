@@ -5,14 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>0010ffb8-aeeb-4b9b-918c-776230933d7f</ProjectGuid>
+    <ProjectGuid>f9918e13-1962-42ef-9418-36cdcf2242b3</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>FlashWriter</RootNamespace>
-    <AssemblyName>FlashWriter</AssemblyName>
+    <RootNamespace>FlashAsm</RootNamespace>
+    <AssemblyName>FlashAsm</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
-    <Name>FlashWriter</Name>
+    <Name>FlashAsm</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -26,7 +26,6 @@
     <DocumentationFile>
     </DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
-    <StartArguments>CRYCYMCRWKWRKWYBGRKWKWRWKCYKMRYKWGBRKBGYRBKWKYWCRMKCM</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

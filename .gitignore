@@ -3,3 +3,5 @@ Flash*/obj
 .vs/*
 */.vs/*
 *.swp
+**/*.pdb
+**/*.xml

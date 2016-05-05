@@ -1,31 +1,29 @@
 ﻿open System
 
-let value = function
-    | 'K' -> 0 // 000 (BGR)
-    | 'R' -> 1 // 001 B
-    | 'G' -> 2 // 010 G
-    | 'Y' -> 3 // 011 R+G
-    | 'B' -> 4 // 100 B
-    | 'M' -> 5 // 101 R+B
-    | 'C' -> 6 // 110 G+B
-    | 'W' -> failwith "White is not used as a direct digit value"
-    | c -> sprintf "Unknown color code: %c" c |> failwith
-
-let byteValue = function
-    | [|c2; c1; c0|] ->
-        let v2 = value c2
-        let v1 = value c1
-        let v0 = value c0
-        v0 + (v1 * 7) + (v2 * 49)
-    | _ -> failwith "Expected sequence of sets of three colors"
-
-let removeWhites code =
-    Seq.append code ['W'] // always end with W
-    |> Seq.append ['W'] |> Seq.pairwise
-    |> Seq.map (fun (a, b) -> if b = 'W' then a else b)
-    |> String.Concat
-
 let dasm (name, code) =
+    let removeWhites code =
+        Seq.append code ['W'] // always end with W
+        |> Seq.append ['W'] |> Seq.pairwise
+        |> Seq.map (fun (a, b) -> if b = 'W' then a else b)
+        |> String.Concat
+    let byteValue =
+        let value = function
+            | 'K' -> 0 // 000 (BGR)
+            | 'R' -> 1 // 001 B
+            | 'G' -> 2 // 010 G
+            | 'Y' -> 3 // 011 R+G
+            | 'B' -> 4 // 100 B
+            | 'M' -> 5 // 101 R+B
+            | 'C' -> 6 // 110 G+B
+            | 'W' -> failwith "White is not used as a direct digit value"
+            | c -> sprintf "Unknown color code: %c" c |> failwith
+        function
+        | [|c2; c1; c0|] ->
+            let v2 = value c2
+            let v1 = value c1
+            let v0 = value c0
+            v0 + (v1 * 7) + (v2 * 49)
+        | _ -> failwith "Expected sequence of sets of three colors"
     printf "Dasm: %s" name
     let codeWithoutWhites = removeWhites code
     // printfn "Code:      %s" code
@@ -35,8 +33,6 @@ let dasm (name, code) =
     |> Seq.map byteValue
     |> Seq.iter (fun v -> printf "%03i " v)
     printfn ""
-
-type Program = { Name: string; Code: string }
 
 let turnLEDoffPaid   = "turn LED off (paid)", "CRYCYMCRWKWRKWYBRBKWKWRMKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCKMYCM"
 // dasm turnLEDoffPaid
@@ -223,78 +219,5 @@ waitNx10ms |> List.iter dasm
 // 304 320 302 001 003 212 000 007 045 036 147 062 155 000 174 182 334
 // 304 320 302 001 003 212 000 007 045 036 147 063 155 000 174 181 334
 // 304 320 302 001 003 212 000 007 045 036 147 064 155 000 174 180 334
-
-let mutable crc = 0uy
-let updateCrc generator byteVal =
-    // append 8 zero bits to the input byte
-    let inputstream = [| byteVal; 0x00uy |]
-    // handle each bit of input stream by iterating over each bit of each input byte
-    inputstream |> Array.iter (fun b ->
-        for i in [7 .. -1 .. 0] do
-            // check if MSB is set
-            if ((crc &&& 0x80uy) <> 0uy) then
-                // MSB set, shift it out of the register
-                crc <- (byte)(crc <<< 1) 
-                (* shift in next bit of input stream:
-                 * If it's 1, set LSB of crc to 1.
-                 * If it's 0, set LSB of crc to 0. *)
-                crc <- if ((byte)(b &&& (1uy <<< i)) <> 0uy) then (byte)(crc ||| 0x01uy) else (byte)(crc &&& 0xFEuy)
-                // Perform the 'division' by XORing the crc register with the generator polynomial
-                crc <- (byte)(crc ^^^ generator)
-            else
-                // MSB not set, shift it out and shift in next bit of input stream. Same as above, just no division
-                crc <- (byte)(crc <<< 1);
-                crc <- if ((byte)(b &&& (1uy <<< i)) <> 0uy) then (byte)(crc ||| 0x01uy) else (byte)(crc &&& 0xFEuy)
-    )
-
-let simpleXor byteVal = crc <- crc ^^^ byteVal
-let xorNot byteVal = crc <- crc ^^^ (~~~byteVal)
-let notXor byteVal = crc <- ~~~(crc ^^^ byteVal)
-let simpleSum byteVal = crc <- crc + byteVal
-let simpleDif byteVal = crc <- crc - byteVal
-
-let notAtEnd c = ~~~c
-
-let test (code: byte[]) expect init name f g = seq {
-    for s in 0 .. code.Length - 1 do
-    for e in code.Length - 1 .. -1 .. 0 do
-        let code' = code.[s .. e]
-        crc <- init
-        Array.iter f code'
-        crc <- g crc
-        if crc = expect && code'.Length > 2 then
-            yield sprintf "Code (name %s, init %i, start: %i): %i %A" name init s crc code' } |> List.ofSeq
-
-let trial code0 expect0 code1 expect1 code2 expect2 code3 expect3 code4 expect4 init name f g =
-    let res0 = test code0 expect0 init name f g
-    let res1 = test code1 expect1 init name f g
-    let res2 = test code2 expect2 init name f g
-    let res3 = test code3 expect3 init name f g
-    let res4 = test code4 expect4 init name f g
-    if res0.Length > 0 && res1.Length > 0 && res2.Length > 0 && res3.Length > 0 && res4.Length > 0 then
-        printfn "Res0: %A" res0
-        printfn "Res1: %A" res1
-        printfn "Res2: %A" res2
-        printfn "Res3: %A" res3
-        printfn "Res4: %A" res4
-        printfn ""
-
-for i in [0uy; 42uy; 255uy] do
-    let code0, expect0 = [|001uy; 003uy; 209uy; 000uy; 010uy; 199uy; 045uy; 036uy; 147uy; 001uy; 002uy; 003uy; 184uy; 000uy; 174uy; 010uy|], 10uy
-    let code1, expect1 = [|001uy; 003uy; 204uy; 000uy; 015uy; 199uy; 045uy; 036uy; 147uy; 100uy; 155uy; 000uy; 000uy; 000uy; 184uy; 000uy; 030uy; 147uy; 000uy; 174uy; 096uy|], 96uy
-    let code2, expect2 = [|001uy; 003uy; 206uy; 000uy; 013uy; 199uy; 045uy; 036uy; 147uy; 000uy; 000uy; 000uy; 184uy; 000uy; 030uy; 147uy; 000uy; 174uy; 095uy|], 95uy
-    let code3, expect3 = [|001uy; 003uy; 204uy; 000uy; 015uy; 199uy; 045uy; 036uy; 147uy; 000uy; 000uy; 000uy; 184uy; 000uy; 030uy; 147uy; 100uy; 155uy; 000uy; 174uy; 096uy|], 96uy
-    let code4, expect4 = [|001uy; 003uy; 166uy; 000uy; 053uy; 199uy; 045uy; 036uy; 147uy; 144uy; 000uy; 009uy; 000uy; 174uy; 027uy; 146uy; 028uy; 146uy; 029uy; 146uy; 000uy; 100uy; 000uy; 184uy; 080uy; 155uy; 100uy; 000uy; 000uy; 184uy; 050uy; 155uy; 000uy; 100uy; 000uy; 184uy; 080uy; 155uy; 100uy; 100uy; 000uy; 184uy; 050uy; 155uy; 000uy; 100uy; 000uy; 184uy; 080uy; 155uy; 000uy; 000uy; 100uy; 184uy; 050uy; 155uy; 184uy; 145uy; 168uy|], 168uy
-
-    // for g in [0uy .. 255uy] do
-    //     trial code0 expect0 code1 expect1 code2 expect2 code3 expect3 code4 expect4 i (sprintf "CRC %i" g) (updateCrc g) id
-    trial code0 expect0 code1 expect1 code2 expect2 code3 expect3 code4 expect4 i "xorNot"    xorNot    id
-    trial code0 expect0 code1 expect1 code2 expect2 code3 expect3 code4 expect4 i "notXor"    notXor    id
-    trial code0 expect0 code1 expect1 code2 expect2 code3 expect3 code4 expect4 i "simpleSum" simpleSum id
-    trial code0 expect0 code1 expect1 code2 expect2 code3 expect3 code4 expect4 i "simpleDif" simpleDif id
-    trial code0 expect0 code1 expect1 code2 expect2 code3 expect3 code4 expect4 i "simpleXor" simpleXor id
-    trial code0 expect0 code1 expect1 code2 expect2 code3 expect3 code4 expect4 i "simpleXor" simpleXor notAtEnd
-
-printfn "Done"
 
 Console.ReadLine() |> ignore

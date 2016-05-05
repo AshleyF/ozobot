@@ -19,23 +19,25 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>.\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Debug\FlashDasm.XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
+    <DocumentationFile>
+    </DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>.\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Release\FlashDasm.XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
+    <DocumentationFile>
+    </DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
