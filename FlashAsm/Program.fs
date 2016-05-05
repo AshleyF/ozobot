@@ -19,11 +19,11 @@ let asm (prog: int list) =
     let checksum = Seq.fold (fun s t -> s - byte t) 0uy >> int
     let unknown0 = [304; 320; 302]
     let unknown1 = [001; 003]
-    let pay = [199]
+    let unk = [199]
     let unknown2 = [045; 036; 147]
     let unknown3 = [000; 030; 147; 000; 174]
     let terminator = 334
-    let mid = pay @ unknown2 @ prog @ unknown3
+    let mid = unk @ unknown2 @ prog @ unknown3
     let length = [206; 000; mid.Length]
     let pre = unknown1 @ length @ mid
     unknown0 @ pre @ [checksum pre; terminator]
