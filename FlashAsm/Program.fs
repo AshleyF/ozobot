@@ -17,19 +17,18 @@ let addWhites = Seq.scan (fun (_, a) t -> a, if t = a then 'W' else t) ('W', 'W'
 
 let asm (prog: int list) =
     let checksum = Seq.fold (fun s t -> s - byte t) 0uy >> int
-    let head = [304; 320; 302]
     let ver = [001; 003]
-    let deny = [] // [199]
-    let terminator = 334
-    let mid = deny @ prog
-    let len = mid.Length
+    let len = prog.Length
     let length = [219 - len; 000; len] // TODO: why?
-    let pre = ver @ length @ mid
-    head @ pre @ [checksum pre; terminator]
+    let pre = ver @ length @ prog
+    pre @ [checksum pre]
 
-let encode = valuesToColors >> addWhites >> String.Concat
+let frame prog = [304; 320; 302] @ prog @ [334]
 
-let led = 0xB8 // "set LED color (Red=127, Green=127, Blue=0)"
+let encode = frame >> valuesToColors >> addWhites >> String.Concat
+
+let kill = 0xCC // first instruction sent?
+let led  = 0xB8 // "set LED color (Red=127, Green=127, Blue=0)"
 let wait = 0x9B // "wait N x 10ms (N)"
 
 let tests () =
@@ -40,11 +39,11 @@ let tests () =
            "CRYCYMCRWKWRKWYBKWKWKWYGKCYKMRYKWGBRKWKWKWYMGWKGYRWKWKGBRKWKYMGWKGYRWKWKWKWGBRYMGWKGYRWKWKYWCBMCWMW"
 tests()
 
-//   [ head    ] [ ver ] [ length  ]     [ unknown ] [ code        ] [ unknown3        ] CHK END
-// P 304 320 302 001 003 207 000 012     045 036 147 000 000 000 184 000 030 147 000 174 038 334
-// N 304 320 302 001 003 206 000 013 199 045 036 147 000 000 000 184 000 030 147 000 174 095 334
+// [ head    ] [ ver ] [ length  ]     [ unknown ] [ code        ] [ unknown3        ] CHK END
+// 304 320 302 001 003 207 000 012     045 036 147 000 000 000 184 000 030 147 000 174 038 334
+// 304 320 302 001 003 206 000 013 199 045 036 147 000 000 000 184 000 030 147 000 174 095 334
 // CRYCYMCRWKWRKWYBRYKWKWRCBKYKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCRCBCMW
 
 [045; 036; 147; 127; 000; 000; led; 100; wait; 000; 127; 000; led; 100; wait; 000; 000; 127; led; 100; wait; 000; 174] |> asm |> encode |> printfn "Prog: %s"
 
-Console.ReadLine()
+Console.ReadLine() |> ignore
