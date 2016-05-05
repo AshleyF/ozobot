@@ -50,7 +50,7 @@ Giving a version, length and checksum. Bytes within this "envelope" are program 
 
 `XX`, `YY` and `ZZ` have to do with the length of the program.
 
-Not fully understood yet, but `ZZ` (perhaps combined with `YY`) appears to be the length of the program instructions (up to the checksum). `XX` is, for some reason that's still a mystery, always 219-length. `YY` has only observed to be zero, but likely it's the high bits of `ZZ` when programs longer than 255 (`FF`) are sent.
+Not fully understood yet, but `ZZ` (perhaps combined with `YY`) appears to be the length of the program instructions (up to the checksum). `XX` is, for some reason that's still a mystery, always 219-length. `YY` has only been observed to be zero, but likely it's the high bits of `ZZ` when programs longer than 255 (`FF`) are sent.
 
 #### Checksum
 
