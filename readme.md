@@ -14,7 +14,7 @@ Scrubbing through a high frame rate video, it's clear that the colors being used
 
 ### Encoding Values
 
-By flashing the same program with parameters in increasing values we can glean the numbering scheme. It appears to be a base-7 encoding (due to no repeats within set of 8 colors) and appears to line up on byte-sized boundaries encoded as sets of three colors. In BGR space, the colors or just 3-bit values:
+By flashing the same program with parameters in increasing values we can glean the numbering scheme. It appears to be a base-7 encoding (due to no repeats within set of 8 colors) and appears to line up on byte-sized boundaries encoded as sets of three colors. In BGR space, the colors are just 3-bit values:
 
 * 0 000 Black
 * 1 001 Red
