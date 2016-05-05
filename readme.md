@@ -32,7 +32,7 @@ Programs are "framed" by:
 
 * `CRY CYM CRW ... CMW`
 
-The first three and the last "word" are CRY CYM CRW and CMW. These decode to values outside of a single byte range (130, 140, 12E and 14E). Everything between however seems to always decode to bytes. We will consider this a "framing" protocol. Just a sequence the robot listens for to switch into "programming" mode.
+The first three and the last "word" are CRY CYM CRW followed by a sequence of encoded bytes and finally CMW. These decode to values outside of a single byte range (130, 140, 12E and 14E). Everything between however seems to always decode to bytes. We will consider this a "framing" protocol. Just a sequence the robot listens for to switch into "programming" mode.
 
 ### Envelope
 
