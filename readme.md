@@ -69,3 +69,51 @@ It appears to be a stack machine with operands sent before operations. For examp
     FF 00 00 B8 64 9B 00 FF 00 B8 64 9B 00 00 FF B8 64 9B
 
 This program fragment blinks red, then green, then blue, with one-second pauses.
+
+### Full Example
+
+This Forth-like code to blink red, green, blue with one-second delays:
+
+    some_stuff // ignore
+    xFF 0 0 led
+    100 wait
+    0 xFF 0 led
+    100 wait
+    0 0 xFF led
+    100 wait
+    some_other_stuff // ignore
+    
+Compiles to:
+
+    2D 24 93 // ignore
+    FF 00 00 B8
+    64 9B
+    00 FF 00 B8
+    64 9B
+    00 00 FF B8
+    64 9B
+    00 AE // ignore
+    
+The version (`01 03`) is prepended along with the length bytes (`C4 00 17`), becomming:
+
+    01 03 C4 00 17 2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE
+    
+The checksum of this is `ED`:
+
+    01 03 C4 00 17 2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE ED
+
+This is framed within `130 140 12E ... 14E`:
+
+    130 140 12E 01 03 C4 00 17 2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE ED 14E
+    
+And encodes directly to color values:
+
+    CRYCYMCRRKKRKKYBKKKKKKYGKCYKMRYKKGBRKKKKKKYMGGKGYRRKKKGBRKKKYMGGKGYRRKKKKKKGBRYMGGKGYRRKKKYYCBMCCMM
+    
+But the robots expects *different* colors for each frame (no repeats), so replacing repeats with white:
+
+    CRYCYMCRWKWRKWYBKWKWKWYGKCYKMRYKWGBRKWKWKWYMGWKGYRWKWKGBRKWKYMGWKGYRWKWKWKWGBRYMGWKGYRWKWKYWCBMCWMW
+
+This can be sent to the robot with [`FlashWriter`](FlashWriter) and viola!
+
+Have fun!
