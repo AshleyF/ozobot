@@ -1,3 +1,3 @@
 #!/bin/bash
 
-CODE=$(mono ./FlashAsm/FlashAsm.exe); mono ./FlashWriter/FlashWriter.exe "${CODE}"
+CODE=$(mono ./bin/FlashAsm.exe); mono ./bin/FlashWriter.exe "${CODE}"
