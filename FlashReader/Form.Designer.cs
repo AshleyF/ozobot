@@ -46,18 +46,20 @@
             // textBox
             // 
             this.textBox.BackColor = System.Drawing.Color.White;
-            this.textBox.Location = new System.Drawing.Point(12, 70);
+            this.textBox.Location = new System.Drawing.Point(24, 133);
+            this.textBox.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.textBox.Multiline = true;
             this.textBox.Name = "textBox";
-            this.textBox.Size = new System.Drawing.Size(497, 44);
+            this.textBox.Size = new System.Drawing.Size(990, 90);
             this.textBox.TabIndex = 0;
             // 
             // label
             // 
             this.label.AutoSize = true;
-            this.label.Location = new System.Drawing.Point(70, 12);
+            this.label.Location = new System.Drawing.Point(140, 23);
+            this.label.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label.Name = "label";
-            this.label.Size = new System.Drawing.Size(393, 52);
+            this.label.Size = new System.Drawing.Size(784, 100);
             this.label.TabIndex = 2;
             this.label.Text = resources.GetString("label.Text");
             // 
@@ -65,20 +67,22 @@
             // 
             this.pictureBox.BackColor = System.Drawing.Color.Pink;
             this.pictureBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBox.Location = new System.Drawing.Point(12, 12);
+            this.pictureBox.Location = new System.Drawing.Point(24, 23);
+            this.pictureBox.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.pictureBox.Name = "pictureBox";
-            this.pictureBox.Size = new System.Drawing.Size(52, 52);
+            this.pictureBox.Size = new System.Drawing.Size(102, 98);
             this.pictureBox.TabIndex = 3;
             this.pictureBox.TabStop = false;
             // 
             // Form
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(521, 124);
+            this.ClientSize = new System.Drawing.Size(1042, 243);
             this.Controls.Add(this.pictureBox);
             this.Controls.Add(this.label);
             this.Controls.Add(this.textBox);
+            this.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.Name = "Form";
             this.Text = "Ozobot Flash Reader";
             this.TopMost = true;

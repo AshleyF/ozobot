@@ -17,18 +17,34 @@ let addWhites = Seq.scan (fun (_, a) t -> a, if t = a then 'W' else t) ('W', 'W'
 
 let asm (prog: int list) =
     let checksum = Seq.fold (fun s t -> s - byte t) 0uy >> int
-    let unknown0 = [304; 320; 302]
-    let unknown1 = [001; 003]
-    let unk = [199]
-    let unknown2 = [045; 036; 147]
-    let unknown3 = [000; 030; 147; 000; 174]
+    let head = [304; 320; 302]
+    let ver = [001; 003]
+    let deny = [] // [199]
     let terminator = 334
-    let mid = unk @ unknown2 @ prog @ unknown3
-    let length = [206; 000; mid.Length]
-    let pre = unknown1 @ length @ mid
-    unknown0 @ pre @ [checksum pre; terminator]
-    |> valuesToColors
-    |> addWhites
-    |> String.Concat
+    let mid = deny @ prog
+    let len = mid.Length
+    let length = [219 - len; 000; len] // TODO: why?
+    let pre = ver @ length @ mid
+    head @ pre @ [checksum pre; terminator]
 
-[000; 000; 000; 184] |> asm |> printfn "%s"
+let encode = valuesToColors >> addWhites >> String.Concat
+
+let led = 0xB8 // "set LED color (Red=127, Green=127, Blue=0)"
+let wait = 0x9B // "wait N x 10ms (N)"
+
+let tests () =
+    let equal a b = if a <> b then printfn "TEST FAILURE: %A <> %A" a b
+    equal ([045; 036; 147; 000; 000; 000; led; 000; 030; 147; 000; 174] |> asm |> encode)
+           "CRYCYMCRWKWRKWYBRBKWKWRMKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCKMYCMW"
+    equal ([045; 036; 147; 127; 000; 000; led; 100; wait; 000; 127; 000; led; 100; wait; 000; 000; 127; led; 100; wait; 000; 174] |> asm |> encode)
+           "CRYCYMCRWKWRKWYBKWKWKWYGKCYKMRYKWGBRKWKWKWYMGWKGYRWKWKGBRKWKYMGWKGYRWKWKWKWGBRYMGWKGYRWKWKYWCBMCWMW"
+tests()
+
+//      [ head    ] [ ver ] [ length  ]     [ unknown ] [ code        ] [ unknown3        ] CHK END
+// Paid 304 320 302 001 003 207 000 012     045 036 147 000 000 000 184 000 030 147 000 174 038 334
+// Not  304 320 302 001 003 206 000 013 199 045 036 147 000 000 000 184 000 030 147 000 174 095 334
+// CRYCYMCRWKWRKWYBRYKWKWRCBKYKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCRCBCMW
+
+[045; 036; 147; 127; 000; 000; led; 100; wait; 000; 127; 000; led; 100; wait; 000; 000; 127; led; 100; wait; 000; 174] |> asm |> encode |> printfn "Prog: %s"
+
+Console.ReadLine()

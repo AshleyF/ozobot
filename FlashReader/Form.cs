@@ -10,10 +10,14 @@ namespace FlashReader
     {
         private Color Sample()
         {
+            const int factor = 2; // for MacBook TODO: API to get this?
             var point = PointToScreen(new Point(pictureBox.Left + pictureBox.Width / 2, pictureBox.Top + pictureBox.Height / 2));
+            this.Text = $"Point {point.X}, {point.Y}";
             var screen = Screen.FromPoint(point);
             var bmp = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
-            Graphics.FromImage(bmp).CopyFromScreen(screen.Bounds.X + point.X, screen.Bounds.Y + point.Y, 0, 0, new Size(1, 1), CopyPixelOperation.SourceCopy);
+            Graphics.FromImage(bmp).CopyFromScreen((screen.Bounds.X + point.X) * factor,
+                                                   (screen.Bounds.Y + point.Y) * factor,
+                                                   0, 0, new Size(1, 1), CopyPixelOperation.SourceCopy);
 
             return bmp.GetPixel(0, 0);
         }

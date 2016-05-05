@@ -24,24 +24,27 @@ let dasm (name, code) =
             let v0 = value c0
             v0 + (v1 * 7) + (v2 * 49)
         | _ -> failwith "Expected sequence of sets of three colors"
-    printf "Dasm: %s" name
+    printf "Dasm: %s " name
     let codeWithoutWhites = removeWhites code
     // printfn "Code:      %s" code
     // printfn "Code (!W): %s" codeWithoutWhites
     codeWithoutWhites
     |> Seq.chunkBySize 3
     |> Seq.map byteValue
-    |> Seq.iter (fun v -> printf "%03i " v)
+    |> Seq.iter (fun v -> printf "%02X " v)
     printfn ""
 
 let turnLEDoffPaid   = "turn LED off (paid)", "CRYCYMCRWKWRKWYBRBKWKWRMKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCKMYCM"
-// dasm turnLEDoffPaid
+dasm turnLEDoffPaid
 let turnLEDoffUnpaid = "turn LED off (paid)", "CRYCYMCRWKWRKWYBRYKWKWRCBKYKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCRCBCM"
-// dasm turnLEDoffUnpaid
+dasm turnLEDoffUnpaid
 
 //      CRY CYM CRW KWR KWY LEN ??? LEN PAY ??? ??? ??? RRR GGG BBB LED ??? ??? ??? ??? ??? CRC TRM
 // Paid 304 320 302 001 003 207 000 012     045 036 147 000 000 000 184 000 030 147 000 174 038 334
 // Not  304 320 302 001 003 206 000 013 199 045 036 147 000 000 000 184 000 030 147 000 174 095 334
+//      CRY CYM CRW 
+// Paid 130 140 12E 01 03 CF 00 0C    2D 24 93 00 00 00 B8 00 1E 93 00 AE 26 14E
+// Not  130 140 12E 01 03 CE 00 0D C7 2D 24 93 00 00 00 B8 00 1E 93 00 AE 5F 14E
 
 let wait100x10msPaid   = "wait 100 x 10ms (paid)", "CRYCYMCRWKWRKWYBGWKWKWRKWCYKMRYKWGKGYRWKWKYWCGCBCM"
 // dasm wait100x10msPaid
@@ -57,11 +60,12 @@ let waitAndTurnOff = "wait and turn off", "CRYCYMCRWKWRKWYBRWKWKWGRBKYKCYKMRYKWG
 let turnOffAndWait = "turn off and wait", "CRYCYMCRWKWRKWYBRWKWKWGRBKYKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWGKGYRWKWKYWCRCMCM"
 // dasm turnOffAndWait
 
+//          [ head    ] [ ver ] [ length  ]     [ init    ] [ code                            ] [ ??? ] CHK END
+//          304 320 302 001 003 206 000 013 199 045 036 147                         000 030 147 000 174 095 334
 //          CRY CYM CRW KWR KWY LEN ??? LEN PAY ??? ??? ??? 100 WAT RRR GGG BBB LED ??? ??? ??? ??? ??? CRC TRM
 // Wait/Off 304 320 302 001 003 204 000 015 199 045 036 147 100 155 000 000 000 184 000 030 147 000 174 096 334
-
-//          CRY CYM CRW KWR KWY LEN ??? LEN PAY ??? ??? ??? RRR GGG BBB LED ??? ??? ??? 100 WAT ??? ??? ??? ???
-// Off/Wait 304 320 302 001 003 204 000 015 199 045 036 147 000 000 000 184 000 030 147 100 155 000 174 096 334 // note: same CRC
+// Off/Wait 304 320 302 001 003 204 000 015 199 045 036 147 000 000 000 184 000 030 147 100 155 000 174 096 334
+//                                                          RRR GGG BBB LED ??? ??? ??? 100 WAT                
 
 let setLEDtoRG = "set LED color (Red=127, Green=127, Blue=0)", "CRYCYMCRWKWRKWYBRCKWKWRYBKYKCYKMRYKWGBRGBRKWKYMGKWKYWCKGBCM"
 // dasm setLEDtoRG
@@ -151,7 +155,7 @@ let waitNx10ms = [
     "wait62x10ms", "CRYCYMCRWKWRKWYBGWKWKWRKWCYKMRYKWRWCYRWKWKYWCYMKCM"
     "wait63x10ms", "CRYCYMCRWKWRKWYBGWKWKWRKWCYKMRYKWRGKYRWKWKYWCYBCWM"
     "wait64x10ms", "CRYCYMCRWKWRKWYBGWKWKWRKWCYKMRYKWRGRYRWKWKYWCYBMCM"]
-waitNx10ms |> List.iter dasm
+// waitNx10ms |> List.iter dasm
 
 // CRY CYM CRW KWR KWY LEN                     NNN WAT         CRC TRM
 // 304 320 302 001 003 212 000 007 045 036 147 000 155 000 174 244 334
@@ -219,5 +223,12 @@ waitNx10ms |> List.iter dasm
 // 304 320 302 001 003 212 000 007 045 036 147 062 155 000 174 182 334
 // 304 320 302 001 003 212 000 007 045 036 147 063 155 000 174 181 334
 // 304 320 302 001 003 212 000 007 045 036 147 064 155 000 174 180 334
+
+
+let setLEDtoRwaitGwaitB = "set LED R, wait, G, wait, B", "CRYCYMCRWKWRKWYBKWKWKWYGKCYKMRYKWGBRKWKWKWYMGWKGYRWKWKGBRKWKYMGWKGYRWKWKWKWGBRYMGWKGYRWKWKYWCBMCWM"
+dasm setLEDtoRwaitGwaitB
+
+// 130 140 12E 01 03 C4 00 17 2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE ED 14E
+
 
 Console.ReadLine() |> ignore
