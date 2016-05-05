@@ -81,7 +81,7 @@ This Forth-like code to blink red, green, blue with one-second delays:
     100 wait
     0 0 xFF led
     100 wait
-    some_other_stuff // ignore
+    off
     
 Compiles to:
 
@@ -92,7 +92,7 @@ Compiles to:
     64 9B
     00 00 FF B8
     64 9B
-    00 AE // ignore
+    00 AE
     
 The version (`01 03`) is prepended along with the length bytes (`C4 00 17`), becomming:
 
