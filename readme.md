@@ -66,6 +66,6 @@ Checksums to `5F` (95).
 
 It appears to be a stack machine with operands sent before operations. For example, the instruction to "set LED color" is `B8` and takes three arguments for red, green and blue values. `FF 00 00 B8` sets the LED to red. The "wait N x 10ms" instruction is `9B` and takes a single argument (the number of centiseconds). `64 9B` waits for one second (`64` hex = 100 dec). These can be composed:
 
-    `FF 00 00 B8 64 9B 00 FF 00 B8 64 9B 00 00 FF B8 64 9B`
+    FF 00 00 B8 64 9B 00 FF 00 B8 64 9B 00 00 FF B8 64 9B
 
 This program fragment blinks red, then green, then blue, with one-second pauses.
