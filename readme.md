@@ -96,15 +96,15 @@ Compiles to:
     
 The version (`01 03`) is prepended along with the length bytes (`C4 00 17`), becomming:
 
-`    01 03` `C4 00 17` `2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE`
+    01 03   C4 00 17   2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE
     
 The checksum of this is `ED`:
 
-    01 03 C4 00 17 2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE ED
+    01 03 C4 00 17 2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE   ED
 
 This is framed within `130 140 12E ... 14E`:
 
-    130 140 12E 01 03 C4 00 17 2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE ED 14E
+    130 140 12E   01 03 C4 00 17 2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE ED    14E
     
 And encodes directly to color values:
 
