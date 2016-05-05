@@ -40,11 +40,11 @@ The bytes within frames appear to be in the form:
 
 * `VV UU XX YY ZZ ... CK`
 
-Giving a version, length and checksum. Bytes within are program instructions.
+Giving a version, length and checksum. Bytes within this "envelope" are program instructions.
 
 #### Version?
 
-Where `VV` and `UU` may be a version number? They have been observed to always be 1 and 3 currently.
+`VV` and `UU` may be a version number? They have been observed to always be 1 and 3 currently.
 
 #### Length
 
