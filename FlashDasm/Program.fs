@@ -29,13 +29,29 @@ let dasm (name, code) =
     |> removeWhites
     |> Seq.chunkBySize 3
     |> Seq.map byteValue
+    |> Seq.skip 8 // frame and envelope
     |> Seq.iter (fun v -> printf "%02X " v)
     printfn ""
 
+// dasm ("turn LED off", "CRYCYMCRWKWRKWYBRBKWKWRMKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCKMYCM")
+// 2D 24 93 00 00 00 B8 00 1E 93 00 AE
+// dasm ("set LED color (0,0,0)", "CRYCYMCRWKWRKWYBGKWKWKRGKCYKMRYKWKWKWKWKWKYMGKWKYWCBGMCM")
+// 2D 24 93 00 00 00 B8 00 AE // same for "set LED color (blue)", etc.
+// dasm ("set random light color", "CRYCYMCRWKWRKWYBRWKWKWGRKCYKMRYKWGBRKWKGCKGBRKWKGCKGBRKWKGCKYMGKWKYWCYMKCM")
+// 2D 24 93 7F 00 8C 7F 00 8C 7F 00 8C B8 00 AE
+// dasm ("random integer from (0) to (127)", "CRYCYMCRWKWRKWYBGBKWKWKMKCYKMRYKWKWKYWCGCYCM")
+// 2D 24 93 00 AE
+// dasm ("tesminate program and turn Ozobot off", "CRYCYMCRWKWRKWYBGWKWKWRKWCYKMRYKWKWKYWCKWKYWCBWRCM")
+// 2D 24 93 00 AE 00 AE
+// dasm ("terminate program and continue line following", "CRYCYMCRWKWRKWYBGWKWKWRKWCYKMRYKWKWRYWCKWKYWCBWKCM")
+// 2D 24 93 01 AE 00 AE
+// dasm ("teminate program and switch to idle", "CRYCYMCRWKWRKWYBGWKWKWRKWCYKMRYKWKWGYWCKWKYWCBYCWM")
+// 2D 24 93 02 AE 00 AE
+
 let turnLEDoffPaid   = "turn LED off (paid)", "CRYCYMCRWKWRKWYBRBKWKWRMKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCKMYCM"
-dasm turnLEDoffPaid
+// dasm turnLEDoffPaid
 let turnLEDoffUnpaid = "turn LED off (paid)", "CRYCYMCRWKWRKWYBRYKWKWRCBKYKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCRCBCM"
-dasm turnLEDoffUnpaid
+// dasm turnLEDoffUnpaid
 
 //      CRY CYM CRW KWR KWY LEN ??? LEN PAY ??? ??? ??? RRR GGG BBB LED ??? ??? ??? ??? ??? CRC TRM
 // Paid 304 320 302 001 003 207 000 012     045 036 147 000 000 000 184 000 030 147 000 174 038 334
@@ -224,7 +240,7 @@ let waitNx10ms = [
 
 
 let setLEDtoRwaitGwaitB = "set LED R, wait, G, wait, B", "CRYCYMCRWKWRKWYBKWKWKWYGKCYKMRYKWGBRKWKWKWYMGWKGYRWKWKGBRKWKYMGWKGYRWKWKWKWGBRYMGWKGYRWKWKYWCBMCWM"
-dasm setLEDtoRwaitGwaitB
+// dasm setLEDtoRwaitGwaitB
 
 // 130 140 12E 01 03 C4 00 17 2D 24 93 7F 00 00 B8 64 9B 00 7F 00 B8 64 9B 00 00 7F B8 64 9B 00 AE ED 14E
 
