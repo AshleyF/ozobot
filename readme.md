@@ -64,9 +64,9 @@ Checksums to `5F` (95).
 
 ### Instructions
 
-It appears to be a stack machine with operands sent before operations. For example, the instruction to "set LED color" is `B8` and takes three arguments for red, green and blue values. `FF 00 00 B8` sets the LED to red. The "wait N x 10ms" instruction is `9B` and takes a single argument (the number of centiseconds). `64 9B` waits for one second (`64` hex = 100 dec). These can be composed:
+It appears to be a stack machine with operands sent before operations. For example, the instruction to "set LED color" is `B8` and takes three arguments for red, green and blue values. `7F 00 00 B8` sets the LED to red. The "wait N x 10ms" instruction is `9B` and takes a single argument (the number of centiseconds). `64 9B` waits for one second (`64` hex = 100 dec). These can be composed:
 
-    FF 00 00 B8   64 9B   00 FF 00 B8   64 9B   00 00 FF B8   64 9B
+    7F 00 00 B8   64 9B   00 7F 00 B8   64 9B   00 00 7F B8   64 9B
 
 This program fragment blinks red, then green, then blue, with one-second pauses.
 
@@ -75,22 +75,22 @@ This program fragment blinks red, then green, then blue, with one-second pauses.
 This Forth-like code to blink red, green, blue with one-second delays:
 
     some_stuff // ignore
-    xFF 0 0 led
+    x7F 0 0 led
     100 wait
-    0 xFF 0 led
+    0 x7F 0 led
     100 wait
-    0 0 xFF led
+    0 0 x7F led
     100 wait
     off
     
 Compiles to:
 
     2D 24 93 // ignore
-    FF 00 00 B8
+    7F 00 00 B8
     64 9B
-    00 FF 00 B8
+    00 7F 00 B8
     64 9B
-    00 00 FF B8
+    00 00 7F B8
     64 9B
     00 AE
     
