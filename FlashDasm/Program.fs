@@ -29,24 +29,32 @@ let dasm (name, code) =
     |> removeWhites
     |> Seq.chunkBySize 3
     |> Seq.map byteValue
-    |> Seq.skip 8 // frame and envelope
+    |> Seq.skip 8 // frame and envelope + first three instructions (prepended by OzoBlockly)
     |> Seq.iter (fun v -> printf "%02X " v)
     printfn ""
 
 // dasm ("turn LED off", "CRYCYMCRWKWRKWYBRBKWKWRMKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCKMYCM")
-// 2D 24 93 00 00 00 B8 00 1E 93 00 AE
+// 00 00 00 B8 00 1E 93 00 AE
 // dasm ("set LED color (0,0,0)", "CRYCYMCRWKWRKWYBGKWKWKRGKCYKMRYKWKWKWKWKWKYMGKWKYWCBGMCM")
-// 2D 24 93 00 00 00 B8 00 AE // same for "set LED color (blue)", etc.
+// 00 00 00 B8 00 AE // same for "set LED color (blue)", etc.
 // dasm ("set random light color", "CRYCYMCRWKWRKWYBRWKWKWGRKCYKMRYKWGBRKWKGCKGBRKWKGCKGBRKWKGCKYMGKWKYWCYMKCM")
-// 2D 24 93 7F 00 8C 7F 00 8C 7F 00 8C B8 00 AE
+// 7F 00 8C 7F 00 8C 7F 00 8C B8 00 AE
 // dasm ("random integer from (0) to (127)", "CRYCYMCRWKWRKWYBGBKWKWKMKCYKMRYKWKWKYWCGCYCM")
-// 2D 24 93 00 AE
+// 00 AE
 // dasm ("tesminate program and turn Ozobot off", "CRYCYMCRWKWRKWYBGWKWKWRKWCYKMRYKWKWKYWCKWKYWCBWRCM")
-// 2D 24 93 00 AE 00 AE
+// 00 AE 00 AE
 // dasm ("terminate program and continue line following", "CRYCYMCRWKWRKWYBGWKWKWRKWCYKMRYKWKWRYWCKWKYWCBWKCM")
-// 2D 24 93 01 AE 00 AE
+// 01 AE 00 AE
 // dasm ("teminate program and switch to idle", "CRYCYMCRWKWRKWYBGWKWKWRKWCYKMRYKWKWGYWCKWKYWCBYCWM")
-// 2D 24 93 02 AE 00 AE
+// 02 AE 00 AE
+// dasm ("set wheel speed (left=20) (right=30)", "CRYCYMCRWKWRKWYBGRKWKWRWKCYKMRYKWKGCKBGYRMKWKYWCYCRCM") // mm/s
+// 14 1E 9F 00 AE (left right 9F)
+// dasm ("stop motors", "CRYCYMCRWKWRKWYBGRKWKWRWKCYKMRYKWKWKWKWYRMKWKYWCBCGCM")
+// 00 00 9F 00 AE (0 0 9F)
+// dasm ("move distance (20) mm speed (30) mm/s", "CRYCYMCRWKWRKWYBGRKWKWRWKCYKMRYKWKGCKBGYRBKWKYWCYCGCM")
+// 14 1E 9E 00 AE (distance speed 9E)
+// dasm ("rotate angle (90) deg speed (30) mm/s", "CRYCYMCRWKWRKWYBGRKWKWRWKCYKMRYKWRMCKBGYKMKWKYWCGBRCM")
+// 2D 24 93 5A 1E 98 00 AE (angle speed 98)
 
 let turnLEDoffPaid   = "turn LED off (paid)", "CRYCYMCRWKWRKWYBRBKWKWRMKCYKMRYKWKWKWKWKWKYMGKWKWBGYKWKWKYWCKMYCM"
 // dasm turnLEDoffPaid
