@@ -4,12 +4,79 @@
         <meta charset="UTF-8">
         <title>FlashForth for Ozobot v0</title>
         <style>
-        body { background: black; color: white; margin-left: auto; margin-right: auto; margin-top: auto; height: 100%; text-align: center; font-family: sans-serif; }
+	html { height: 100% }
+        body { height: 100%; background: black; color: white; margin: 0; padding: 1em; text-align: center; font-family: sans-serif; }
         a { color: white; }
+	textarea { width: 100%; height: 100%; font-family: monospace; background: black; color: white; border: 1px solid white; }
+	button { border: 1px solid white; background: black; color: white; }
+	#load { width: 200px; height: 200px; -webkit-border-radius: 100px; -moz-border-radius: 100px; border-radius: 100px; background-color: white; }
+	#flash span { -webkit-border-radius: 10px; -moz-border-radius: 10px; border-radius: 10px; font-size: 10px; }
+	.W { background: white; border: 1px solid white; }
+	.R { background: red; border: 1px solid red; }
+	.G { background: green; border: 1px solid green; }
+	.B { background: blue; border: 1px solid blue; }
+	.C { background: cyan; border: 1px solid cyan; }
+	.M { background: magenta; border: 1px solid magenta; }
+	.Y { background: yellow; border: 1px solid yellow; }
+	.K { background: black; border: 1px solid gray; }
         </style>
+	<script>
+	function assemble(source) {
+		return 'ASM ' + source;
+	}
+
+	function encode(code) {
+		return 'RGBCMYKW';
+	}
+
+	function circles(colors) {
+		var h = "";
+		for (var i in colors) {
+			var c = colors[i];
+			h += "<span class='" + c + "'>&nbsp;</span>";
+		}
+		return h;
+	}
+
+	function update() {
+		var source = document.getElementById('source').value;
+		var code = assemble(source);
+		var colors = circles(encode(code));
+		document.getElementById('asm').innerHTML = code;
+		document.getElementById('flash').innerHTML = colors;
+	}
+
+	function flash() {
+		var colors = encode(assemble(document.getElementById('source').value));
+		alert('Loading ' + colors);
+	}
+
+	window.addEventListener('DOMContentLoaded', function() {
+		update();
+		document.getElementById('source').addEventListener('input', update);
+	});
+	</script>
     </head>
     <body>
-        <h1>FlashForth for <a href="http://ozobot.com">Ozobot</a></h1>
-        <p>Coming soon...</p>
+	<table width="100%" height="100%" cellpadding="5">
+		<tr>
+			<td colspan="3">
+				<h1>FlashForth for <a href="http://ozobot.com">Ozobot</a></h1>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3" height="100%">
+				<textarea id="source">\ enter code here&#10;</textarea>
+			</td>
+		</tr>
+		<tr>
+			<td width="80%">
+				<p id="asm">This is a test</p>
+				<p id="flash"></p>
+			</td>
+			<td><button onclick="flash">Flash&nbsp;&gt;</button></td>
+			<td><div id="load" /></td>
+		</tr>
+	</table>
     </body>
 </html>
