@@ -74,6 +74,10 @@ It appears to be a stack machine with operands sent before operations. For examp
 
 This program fragment blinks red, then green, then blue, with one-second pauses.
 
+#### Literals
+
+Values less than 128 are considered literals and pushed to the stack. Values of 128 or higher are instructions. You may notice that in OzoBlockly negative values are supported. This is done by emitting a *positive* value (one less than desired) followed by a `not` (`83` hex) instruction. This gives a range of -128 to +127.
+
 ### Full Example
 
 This Forth-like code to blink red, green, blue with one-second delays:

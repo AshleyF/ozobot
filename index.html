@@ -12,24 +12,28 @@
 	button { width: 32px; height: 32px; border: 1px solid white; background: black; color: white; }
 	#pad { width: 200px; height: 200px; -webkit-border-radius: 100px; -moz-border-radius: 100px; border-radius: 100px; }
 	#flash span { -webkit-border-radius: 10px; -moz-border-radius: 10px; border-radius: 10px; font-size: 10px; }
-	.W { background: white; border: 1px solid white; }
-	.R { background: red; border: 1px solid red; }
-	.G { background: green; border: 1px solid green; }
-	.B { background: blue; border: 1px solid blue; }
-	.C { background: cyan; border: 1px solid cyan; }
-	.M { background: magenta; border: 1px solid magenta; }
-	.Y { background: yellow; border: 1px solid yellow; }
-	.K { background: black; border: 1px solid gray; }
+	.W { background: #fff; border: 1px solid #fff; }
+	.R { background: #f00; border: 1px solid #f00; }
+	.G { background: #0f0; border: 1px solid #0f0; }
+	.B { background: #00f; border: 1px solid #00f; }
+	.C { background: #0ff; border: 1px solid #0ff; }
+	.M { background: #f0f; border: 1px solid #f0f; }
+	.Y { background: #ff0; border: 1px solid #ff0; }
+	.K { background: #000; border: 1px solid #ccc; }
         </style>
 	<script>
-	var dictionary = {
-                'OFF':  { op: 0,    sig: 'lit',  help: 'Switch robot off. Argument to `end`' },
-                'LINE': { op: 1,    sig: 'lit',  help: 'Switch to line following. Argument to `end`' },
-                'IDLE': { op: 2,    sig: 'lit',  help: 'Switch to idle. Argument to `end`' },
-		'end':  { op: 0xae, sig: 'm',    help: 'End program and switch to mode `m` (see `OFF`, `LINE`, `IDLE`)' },
-		'neg':  { op: 0x83, sig: 'x -x', help: 'Negate value (used to generate negative literals, etc.)' },
-		'wait': { op: 0x9b, sig: 'x',    help: 'Wait x centiseconds (x * 10ms)' },
-		'led':  { op: 0xb8, sig: 'rgb',  help: 'Set R, G, B values (0-127)' },
+	var dictionary  = {
+                'OFF'   : { op: 0   , sig: '-0'   , help: 'Switch robot off. Argument to `end`' },
+                'LINE'  : { op: 1   , sig: '-1'   , help: 'Switch to line following. Argument to `end`' },
+                'IDLE'  : { op: 2   , sig: '-2'   , help: 'Switch to idle. Argument to `end`' },
+		'end'   : { op: 0xae, sig: 'm-'   , help: 'End program and switch to mode `m` (see `OFF`, `LINE`, `IDLE`)' },
+		'not'   : { op: 0x83, sig: 'x-x'  , help: 'Negate value (used to generate negative literals, etc.)' },
+		'wait'  : { op: 0x9b, sig: 'x'    , help: 'Wait x centiseconds (x * 10ms)' },
+		'led'   : { op: 0xb8, sig: 'rgb'  , help: 'Set R, G, B values (0-127)' },
+		'call'  : { op: 0x90, sig: ':addr', help: 'Call address (used by compiler)', internal: true },
+		'ret'   : { op: 0x91, sig: ''     , help: 'Return from call (used by compiler)', internal: true },
+                'poke'  : { op: 0xa6, sig: 'xn-'  , help: 'Poke value (x) to caller\' nth stack item (used by compiler)', internal: true },
+                'peek'  : { op: 0xa7, sig: 'n-x'  , help: 'Peek value from caller\' nth stack item (used by compiler)', internal: true },
 		};
 
 	function assemble(source) {

@@ -12,7 +12,6 @@ namespace FlashReader
         {
             const int factor = 2; // for MacBook TODO: API to get this?
             var point = PointToScreen(new Point(pictureBox.Left + pictureBox.Width / 2, pictureBox.Top + pictureBox.Height / 2));
-            this.Text = $"Point {point.X}, {point.Y}";
             var screen = Screen.FromPoint(point);
             var bmp = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
             Graphics.FromImage(bmp).CopyFromScreen((screen.Bounds.X + point.X) * factor,
@@ -65,6 +64,53 @@ namespace FlashReader
             }
         }
 
+        private string Dasm(string colors)
+        {
+            try
+            {
+                var dasm = "";
+                var v = 0;
+                var skip = 8;
+                for (var i = 0; i < colors.Length; i++)
+                {
+                    var c = colors[i];
+                    if (c == 'W') c = colors[i - 1];
+                    v *= 7;
+                    switch(c)
+                    {
+                        case 'R': v += 1; break;
+                        case 'G': v += 2; break;
+                        case 'Y': v += 3; break;
+                        case 'B': v += 4; break;
+                        case 'M': v += 5; break;
+                        case 'C': v += 6; break;
+                    }
+                    if ((i + 1) % 3 == 0)
+                    {
+                        switch(v)
+                        {
+                            case 0xae: dasm += "end " ; break;
+                            case 0x83: dasm += "not " ; break;
+                            case 0x9b: dasm += "wait "; break;
+                            case 0xb8: dasm += "led " ; break;
+                            case 0x90: dasm += "call "; break;
+                            case 0x91: dasm += "ret " ; break;
+                            case 0xa6: dasm += "poke "; break;
+                            case 0xa7: dasm += "peek "; break;
+                            default:
+                                if (skip-- <= 0 && i < colors.Length - 6) // skip first 8 (frame, version, length) and last two bytes (checksum, frame)
+                                    dasm += String.Format("{0:x2} ", v); break;
+                        }
+                        v = 0;
+                    }
+                }
+                return dasm;
+            } catch(Exception ex)
+            {
+                return colors;
+            }
+        }
+
         private void timer_Tick(object sender, EventArgs e)
         {
             try
@@ -78,12 +124,11 @@ namespace FlashReader
                 if (last == 'W' && ellapsed > 100) // end of sequence
                 {
                     var txt = textBox.Text;
-                    Console.WriteLine($"Test: {txt}");
                     if (txt.Length > 0 && txt[txt.Length - 1] == 'W')
                     {
-                        txt = txt.Substring(0, txt.Length - 1);
-                        textBox.Text = txt;
-                        Clipboard.SetText(txt);
+                        var dasm = Dasm(txt);
+                        textBox.Text = dasm;
+                        Clipboard.SetText(dasm);
                     }
                 }
             }
