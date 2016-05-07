@@ -2,6 +2,10 @@
 
 This is a pretty cool little line-follower. They publish the ["Static Codes", but not the "Flash Codes"](http://ozobot.com/play/color-code-language) which are used with [OzoBlockly](http://ozoblockly.com/). There is no SDK. So, we must resort to reverse engineering ;) It's a fun toy and even more fun as an enigma to be unravelled.
 
+## FlashForth
+
+A simple programming "IDE" [is available here](http://ashleyf.github.io/ozobot). Have fun!
+
 ## Reading Flash Codes
 
 In [OzoBlockly](http://ozoblockly.com/), programs are transmitted to the robot through the color sensor by flashing colors on the screen.
