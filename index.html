@@ -1,178 +1,194 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
         <title>FlashForth for Ozobot</title>
         <style>
-	html { height: 100% }
-        body { height: 100%; background: black; color: white; margin: 0; padding: 1em; text-align: center; font-family: sans-serif; margin: 0; padding: 0; }
-        a { color: white; }
-	textarea { width: 100%; height: 100%; font-family: monospace; background: black; color: white; border: 1px solid white; }
-	#errors { color: red; }
-	button { width: 32px; height: 32px; border: 1px solid white; background: black; color: white; }
-	#pad { width: 200px; height: 200px; -webkit-border-radius: 100px; -moz-border-radius: 100px; border-radius: 100px; }
-	#flash span { -webkit-border-radius: 10px; -moz-border-radius: 10px; border-radius: 10px; font-size: 10px; }
-	.W { background: #fff; border: 1px solid #fff; }
-	.R { background: #f00; border: 1px solid #f00; }
-	.G { background: #0f0; border: 1px solid #0f0; }
-	.B { background: #00f; border: 1px solid #00f; }
-	.C { background: #0ff; border: 1px solid #0ff; }
-	.M { background: #f0f; border: 1px solid #f0f; }
-	.Y { background: #ff0; border: 1px solid #ff0; }
-	.K { background: #000; border: 1px solid #ccc; }
+            html { height: 100% }
+            body { height: 100%; background: black; color: white; margin: 0; padding: 1em; text-align: center; font-family: sans-serif; margin: 0; padding: 0; }
+            a { color: white; }
+            textarea { width: 100%; height: 100%; font-family: monospace; background: black; color: white; border: 1px solid white; }
+            #errors { color: red; }
+            button { width: 32px; height: 32px; border: 1px solid white; background: black; color: white; }
+            #pad { width: 200px; height: 200px; -webkit-border-radius: 100px; -moz-border-radius: 100px; border-radius: 100px; }
+            #flash span { -webkit-border-radius: 10px; -moz-border-radius: 10px; border-radius: 10px; font-size: 10px; }
+            .W { background: #fff; border: 1px solid #fff; }
+            .R { background: #f00; border: 1px solid #f00; }
+            .G { background: #0f0; border: 1px solid #0f0; }
+            .B { background: #00f; border: 1px solid #00f; }
+            .C { background: #0ff; border: 1px solid #0ff; }
+            .M { background: #f0f; border: 1px solid #f0f; }
+            .Y { background: #ff0; border: 1px solid #ff0; }
+            .K { background: #000; border: 1px solid #ccc; }
         </style>
-	<script>
-	var dictionary  = {
-                'OFF'   : { op: 0   , sig: '-0'   , help: 'Switch robot off. Argument to `end`' },
-                'LINE'  : { op: 1   , sig: '-1'   , help: 'Switch to line following. Argument to `end`' },
-                'IDLE'  : { op: 2   , sig: '-2'   , help: 'Switch to idle. Argument to `end`' },
-		'end'   : { op: 0xae, sig: 'm-'   , help: 'End program and switch to mode `m` (see `OFF`, `LINE`, `IDLE`)' },
-		'not'   : { op: 0x83, sig: 'x-x'  , help: 'Negate value (used to generate negative literals, etc.)' },
-		'wait'  : { op: 0x9b, sig: 'x'    , help: 'Wait x centiseconds (x * 10ms)' },
-		'led'   : { op: 0xb8, sig: 'rgb'  , help: 'Set R, G, B values (0-127)' },
-		'call'  : { op: 0x90, sig: ':addr', help: 'Call address (used by compiler)', internal: true },
-		'ret'   : { op: 0x91, sig: ''     , help: 'Return from call (used by compiler)', internal: true },
-                'poke'  : { op: 0xa6, sig: 'xn-'  , help: 'Poke value (x) to caller\' nth stack item (used by compiler)', internal: true },
-                'peek'  : { op: 0xa7, sig: 'n-x'  , help: 'Peek value from caller\' nth stack item (used by compiler)', internal: true },
-		};
+i
+    <script>
+    var dictionary  = {
+        'OFF'   : { op: 0   , sig: '-0'   , help: 'Switch robot off. Argument to `end`' },
+        'LINE'  : { op: 1   , sig: '-1'   , help: 'Switch to line following. Argument to `end`' },
+        'IDLE'  : { op: 2   , sig: '-2'   , help: 'Switch to idle. Argument to `end`' },
+        'not'   : { op: 0x8a, sig: 'x-x'  , help: 'Boolean not value' },
+        '~'     : { op: 0x83, sig: 'x-x'  , help: 'Bitwise not value (used to generate negative literals, etc.)' },
+        '+'     : { op: 0x85, sig: 'yx-z' , help: 'Addition (x + y)' },
+        '-'     : { op: 0x86, sig: 'yx-z' , help: 'Subtraction (x - y)' },
+        '*'     : { op: 0x87, sig: 'yx-z' , help: 'Multiplication (x * y)' },
+        '/'     : { op: 0x88, sig: 'yx-z' , help: 'Division (x / y)' },
+        'mod'   : { op: 0x89, sig: 'yx-z' , help: 'Modulus (x mod y)' },
+        'rand'  : { op: 0x8c, sig: 'mn-r' , help: 'Random number from n to m' },
+        'call'  : { op: 0x90, sig: ':addr', help: 'Call address (used by compiler)', internal: true },
+        ';'     : { op: 0x91, sig: ''     , help: 'Return from call (used by compiler)', internal: true },
+        'turn'  : { op: 0x98, sig: 'as-'  , help: 'Turn angle (deg)/speed (mm/s)' },
+        'wait'  : { op: 0x9b, sig: 'x'    , help: 'Wait x centiseconds (x * 10ms)' },
+        'move'  : { op: 0x9e, sig: 'ds-'  , help: 'Move distance (mm, negative for reverse)/speed (mm/s)' },
+        'wheels': { op: 0x9f, sig: 'lr-'  , help: 'Set left/right wheel speeds (mm/s, negative for reverse)' },
+        '='     : { op: 0xa6, sig: 'yx-'  , help: 'Equality (x = y)' },
+        'poke'  : { op: 0xa6, sig: 'xn-'  , help: 'Poke value (x) to caller\' nth stack item (used by compiler)', internal: true },
+        'peek'  : { op: 0xa7, sig: 'n-x'  , help: 'Peek value from caller\' nth stack item (used by compiler)', internal: true },
+        'end'   : { op: 0xae, sig: 'm-'   , help: 'End program and switch to mode `m` (see `OFF`, `LINE`, `IDLE`)' },
+        'led'   : { op: 0xb8, sig: 'rgb'  , help: 'Set R, G, B values (0-127)' },
+        };
 
-	function assemble(source) {
-		var asm = [];
-		var errors = '';
-		var lines = source.match(/[^\r\n]+/g);
-		for (var l in lines) {
-			var line = lines[l];
-			var words = line.match(/\S+/g);
-			for (var w in words) {
-				var word = words[w];
-				if (word == '\\') break;
-				var i = parseInt(word);
-				if (!isNaN(i)) {
-					if (i < 0 || i > 127) {
-						errors += 'Value out of range error: ' + i + '<br />';
-						continue;
-					} else {
-						asm.push(i);
-					}
-				} else {
-					var dic = dictionary[word];
-					if (dic) {
-						asm.push(dic.op);
-					} else {
-						errors += 'Unknown word: ' + word + '<br />';
-						continue;
-					}
-				}
-			}
-		}
-		document.getElementById('errors').innerHTML = errors;
-		return asm;
-	}
+    function assemble(source) {
+        var asm = [];
+        var errors = '';
+        var lines = source.match(/[^\r\n]+/g);
+        for (var l in lines) {
+            var line = lines[l];
+            var words = line.match(/\S+/g);
+            for (var w in words) {
+                var word = words[w];
+                if (word == '\\') break;
+                var i = parseInt(word);
+                if (!isNaN(i)) {
+                    if (i < 0 || i > 127) {
+                        errors += 'Value out of range error: ' + i + '<br />';
+                        continue;
+                    } else {
+                        asm.push(i);
+                    }
+                } else {
+                    var dic = dictionary[word];
+                    if (dic) {
+                        asm.push(dic.op);
+                    } else {
+                        errors += 'Unknown word: ' + word + '<br />';
+                        continue;
+                    }
+                }
+            }
+        }
+        document.getElementById('errors').innerHTML = errors;
+        return asm;
+    }
 
-	function encode(code) {
-		code = [0x2D, 0x24, 0x93].concat(code);
-		var enc = 'W';
-		function append(i) {
-			function color(i) {
-				switch (i) {
-					case 0: return 'K';
-					case 1: return 'R';
-					case 2: return 'G';
-					case 3: return 'Y';
-					case 4: return 'B';
-					case 5: return 'M';
-					case 6: return 'C';
-					default: throw 'Invalid color digit: ' + i;
-				}
-			}
-			var c = color(i);
-			enc += enc[enc.length - 1] == c ? 'W' : c;
-		}
-		function checksum(bytes) {
-			var chk = 0;
-			for (var i in bytes) {
-				chk -= bytes[i];
-				chk >>>= 0; // unsigned
-				chk &= 0xff; // byte
-			}
-			return chk;
-		}
-		var ver = [1, 3];
-		var len = code.length;
-		var length = [219 - len, 0, len]; // TODO: why?
-		var pre = ver.concat(length, code);
-		var chk = checksum(pre);
-		var framed = [304, 320, 302].concat(pre, chk, 334);
-		for (var i in framed) {
-			var v = framed[i];
-			append(Math.floor(v / 49) % 7);
-			append(Math.floor(v / 7) % 7);
-			append(v % 7);
-		}
-		return enc;
-	}
+    function encode(code) {
+        code = [0x2D, 0x24, 0x93].concat(code);
+        var enc = 'W';
+        function append(i) {
+            function color(i) {
+                switch (i) {
+                    case 0: return 'K';
+                    case 1: return 'R';
+                    case 2: return 'G';
+                    case 3: return 'Y';
+                    case 4: return 'B';
+                    case 5: return 'M';
+                    case 6: return 'C';
+                    default: throw 'Invalid color digit: ' + i;
+                }
+            }
+            var c = color(i);
+            enc += enc[enc.length - 1] == c ? 'W' : c;
+        }
+        function checksum(bytes) {
+            var chk = 0;
+            for (var i in bytes) {
+                chk -= bytes[i];
+                chk >>>= 0; // unsigned
+                chk &= 0xff; // byte
+            }
+            return chk;
+        }
+        var ver = [1, 3];
+        var len = code.length;
+        var length = [219 - len, 0, len]; // TODO: why?
+        var pre = ver.concat(length, code);
+        var chk = checksum(pre);
+        var framed = [304, 320, 302].concat(pre, chk, 334);
+        for (var i in framed) {
+            var v = framed[i];
+            append(Math.floor(v / 49) % 7);
+            append(Math.floor(v / 7) % 7);
+            append(v % 7);
+        }
+        return enc;
+    }
 
-	function circles(colors) {
-		if (colors.length > 1) {
-			colors = colors.substr(1, colors.length - 2); // trim off whites
-			var h = "";
-			for (var i in colors) {
-				var c = colors[i];
-				h += "<span class='" + c + "'>&nbsp;</span>";
-			}
-			return h;
-		}
-	}
+    function circles(colors) {
+        if (colors.length > 1) {
+            colors = colors.substr(1, colors.length - 2); // trim off whites
+            var h = "";
+            for (var i in colors) {
+                var c = colors[i];
+                h += "<span class='" + c + "'>&nbsp;</span>";
+            }
+            return h;
+        }
+    }
 
-	function update() {
-		var source = document.getElementById('source').value;
-		var code = assemble(source);
-		var colors = circles(encode(code));
-		document.getElementById('asm').innerHTML = code.map(function(x) { return x.toString(16) }).join(' ');
-		document.getElementById('flash').innerHTML = colors;
-	}
+    function update() {
+        var source = document.getElementById('source').value;
+        var code = assemble(source);
+        var colors = circles(encode(code));
+        document.getElementById('asm').innerHTML = code.map(function(x) { return x.toString(16) }).join(' ');
+        document.getElementById('flash').innerHTML = colors;
+    }
 
-	function blink(colors) {
-		if (colors.length > 0) {
-			document.getElementById('pad').className = colors[0];
-			window.setTimeout(function() { blink(colors.substr(1)); }, 50);
-		}
-	}
+    function blink(colors) {
+        if (colors.length > 0) {
+            document.getElementById('pad').className = colors[0];
+            window.setTimeout(function() { blink(colors.substr(1)); }, 50);
+        }
+    }
 
-	function flash() {
-		var colors = encode(assemble(document.getElementById('source').value));
-		// prompt('Loading', colors);
-		window.setTimeout(function() { blink(colors); }, 2000);
-	}
+    function flash() {
+        var colors = encode(assemble(document.getElementById('source').value));
+        // prompt('Loading', colors);
+        window.setTimeout(function() { blink(colors); }, 2000);
+    }
 
-	window.addEventListener('DOMContentLoaded', function() {
-		update();
-		document.getElementById('source').addEventListener('input', update);
-		document.getElementById('load').addEventListener('click', flash);
-	});
-	</script>
+    window.addEventListener('DOMContentLoaded', function() {
+        update();
+        document.getElementById('source').addEventListener('input', update);
+        document.getElementById('load').addEventListener('click', flash);
+    });
+    </script>
     </head>
     <body>
-	<table width="100%" height="100%" cellpadding="10">
-		<tr>
-			<td colspan="3">
-				<h1><a href="http://github.com/ashleyf/ozobot">FlashForth for Ozobot</a></h1>
-			</td>
-		</tr>
-		<tr>
-			<td colspan="3" height="100%">
-				<textarea id="source">\ enter code here&#10;127 0 0 led 100 wait&#10;0 127 0 led 100 wait&#10;0 0 127 led 100 wait&#10;OFF end</textarea>
-			</td>
-		</tr>
-		<tr>
-			<td width="80%">
-				<p id="errors"></p>
-				<p id="asm"></p>
-				<p id="flash"></p>
-			</td>
-			<td><button id="load">&gt;</button></td>
-			<td><div class='W' id="pad" /></td>
-		</tr>
-	</table>
+    <table width="100%" height="100%" cellpadding="10">
+        <tr>
+            <td colspan="3">
+                <h1><a href="http://github.com/ashleyf/ozobot">FlashForth for Ozobot</a></h1>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3" height="100%">
+                <textarea id="source">\ enter code here&#10;127 0 0 led 100 wait&#10;0 127 0 led 100 wait&#10;0 0 127 led 100 wait&#10;OFF end</textarea>
+            </td>
+        </tr>
+        <tr>
+            <td width="80%">
+                <p id="errors"></p>
+                <p id="asm"></p>
+                <p id="flash"></p>
+            </td>
+            <td><button id="load">&gt;</button></td>
+            <td><div class='W' id="pad" /></td>
+        </tr>
+    </table>
     </body>
 </html>
+<!-- TODO
+* Cancel loading
+* Support negative
+-->
