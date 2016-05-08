@@ -33,7 +33,9 @@
             .error { color: red; }
         </style>
         <script>
-        var dictionary  = {
+            var dictionary  = {
+            'TRUE'  : { op: 1   , sig: '-1'   , help: 'True constant' },
+            'FALSE' : { op: 0   , sig: '-0'   , help: 'False constant' },
             'OFF'   : { op: 0   , sig: '-0'   , help: 'Switch robot off. Argument to `end`' },
             'LINE'  : { op: 1   , sig: '-1'   , help: 'Switch to line following. Argument to `end`' },
             'IDLE'  : { op: 2   , sig: '-2'   , help: 'Switch to idle. Argument to `end`' },
@@ -50,11 +52,14 @@
             ';'     : { op: 0x91, sig: ''     , help: 'Return from call (used by compiler)', internal: true },
             'turn'  : { op: 0x98, sig: 'as-'  , help: 'Turn angle (deg)/speed (mm/s)' },
             'wait'  : { op: 0x9b, sig: 'x'    , help: 'Wait x centiseconds (x * 10ms)' },
+            '>='    : { op: 0x9c, sig: 'x-x'  , help: 'Greater than or equal. (< is `>= not`)' },
+            '>'     : { op: 0x9d, sig: 'x'    , help: 'Greater than. (<= is `> not`)' },
             'move'  : { op: 0x9e, sig: 'ds-'  , help: 'Move distance (mm, negative for reverse)/speed (mm/s)' },
             'wheels': { op: 0x9f, sig: 'lr-'  , help: 'Set left/right wheel speeds (mm/s, negative for reverse)' },
-            '='     : { op: 0xa6, sig: 'yx-'  , help: 'Equality (x = y)' },
+            '='     : { op: 0xa4, sig: 'yx-'  , help: 'Equality (x = y)' },
             'poke'  : { op: 0xa6, sig: 'xn-'  , help: 'Poke value (x) to caller\' nth stack item (used by compiler)', internal: true },
             'peek'  : { op: 0xa7, sig: 'n-x'  , help: 'Peek value from caller\' nth stack item (used by compiler)', internal: true },
+            'abs'   : { op: 0xa8, sig: 'x-x'  , help: 'Absolute value.' },
             'end'   : { op: 0xae, sig: 'm-'   , help: 'End program and switch to mode `m` (see `OFF`, `LINE`, `IDLE`)' },
             'led': { op: 0xb8, sig: 'rgb', help: 'Set R, G, B values (0-127)' },
         };
@@ -67,7 +72,7 @@
             // if (sel.anchorNode) {
             //     var range = document.createRange();
             //     var el = document.getElementById(parid);
-            //     var txt = el.innerText;
+            //     var txt = el.textContent;
             //     range.selectNodeContents(el);
             //     range.collapse(true);
             //     range.setStart(el, 1);
@@ -182,7 +187,7 @@
         }
 
         function update() {
-            var source = document.getElementById('source').innerText;
+            var source = document.getElementById('source').textContent;
             var code = assemble(source);
             var colors = flashCodes(encode(code));
             document.getElementById('asm').innerHTML = code.map(function (x) { return x.toString(16) }).join(' ');
@@ -195,7 +200,7 @@
                 document.getElementById('pad').className = colors[0];
                 window.setTimeout(function() { blink(colors.substr(1)); }, 50);
             } else {
-                document.getElementById("load").innerText = "Load";
+                document.getElementById("load").textContent = "Load";
                 document.getElementById('pad').className = 'W';
                 flashing = false;
             }
@@ -205,15 +210,15 @@
             if (flashing) {
                 flashing = false; // cause abort
             } else {
-                var colors = encode(assemble(document.getElementById('source').innerText));
+                var colors = encode(assemble(document.getElementById('source').textContent));
                 // prompt('Loading', colors);
-                document.getElementById("load").innerText = "Stop";
+                document.getElementById("load").textContent = "Stop";
                 flashing = true;
                 window.setTimeout(function () { blink(colors); }, 0);
             }
         }
 
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', function () {
             update();
             document.getElementById('load').addEventListener('click', flash);
             var h = '';
