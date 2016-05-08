@@ -15,19 +15,22 @@
             td.selected { border: 1px solid white; border-bottom: none; background: #222; color: white; cursor: auto; }
             #panels { border-left: 1px solid white; border-right: 1px solid white; border-bottom: 1px solid white; background: #222; padding: 1em; }
             div#source { text-align: left; font-family: monospace; height: 100%; border: 1px solid gray; background: black; padding: 0.5em; }
-            #errors { color: red; }
             button { border: 1px solid white; background: black; color: white; padding: 0.5em; margin-bottom: 1em; }
             #pad { margin: 0 auto; width: 20em; height: 20em; -webkit-border-radius: 10em; -moz-border-radius: 10em; border-radius: 10em; }
             #flash span { -webkit-border-radius: 10px; -moz-border-radius: 10px; border-radius: 10px; font-size: 10px; }
             #help td { border: 1px solid gray; padding: 0.1em; padding-left: 0.5em; padding-right: 0.5em; margin: 0; text-align: left; }
-            .W { background: #fff; border: 1px solid #fff; }
-            .R { background: #f00; border: 1px solid #f00; }
-            .G { background: #0f0; border: 1px solid #0f0; }
-            .B { background: #00f; border: 1px solid #00f; }
-            .C { background: #0ff; border: 1px solid #0ff; }
-            .M { background: #f0f; border: 1px solid #f0f; }
-            .Y { background: #ff0; border: 1px solid #ff0; }
-            .K { background: #000; border: 1px solid #ccc; }
+            .W { background: #fff; border: 1px solid #000; }
+            .R { background: #f00; border: 1px solid #000; }
+            .G { background: #0f0; border: 1px solid #000; }
+            .B { background: #00f; border: 1px solid #000; }
+            .C { background: #0ff; border: 1px solid #000; }
+            .M { background: #f0f; border: 1px solid #000; }
+            .Y { background: #ff0; border: 1px solid #000; }
+            .K { background: #000; border: 1px solid #555; }
+            .comment { color: white; }
+            .word { color: #0f0; }
+            .literal { color: yellow; }
+            .error { color: red; }
         </style>
         <script>
         var dictionary  = {
@@ -35,7 +38,8 @@
             'LINE'  : { op: 1   , sig: '-1'   , help: 'Switch to line following. Argument to `end`' },
             'IDLE'  : { op: 2   , sig: '-2'   , help: 'Switch to idle. Argument to `end`' },
             'not'   : { op: 0x8a, sig: 'x-x'  , help: 'Boolean not value' },
-            '~'     : { op: 0x83, sig: 'x-x'  , help: 'Bitwise not value (used to generate negative literals, etc.)' },
+            'neg'   : { op: 0x8b, sig: 'x-x'  , help: 'Negated values value (e.g. used to generate negative literals)' },
+            '~'     : { op: 0x83, sig: 'x-x'  , help: 'Bitwise not value' },
             '+'     : { op: 0x85, sig: 'yx-z' , help: 'Addition (x + y)' },
             '-'     : { op: 0x86, sig: 'yx-z' , help: 'Subtraction (x - y)' },
             '*'     : { op: 0x87, sig: 'yx-z' , help: 'Multiplication (x * y)' },
@@ -52,39 +56,73 @@
             'poke'  : { op: 0xa6, sig: 'xn-'  , help: 'Poke value (x) to caller\' nth stack item (used by compiler)', internal: true },
             'peek'  : { op: 0xa7, sig: 'n-x'  , help: 'Peek value from caller\' nth stack item (used by compiler)', internal: true },
             'end'   : { op: 0xae, sig: 'm-'   , help: 'End program and switch to mode `m` (see `OFF`, `LINE`, `IDLE`)' },
-            'led'   : { op: 0xb8, sig: 'rgb'  , help: 'Set R, G, B values (0-127)' },
-            };
+            'led': { op: 0xb8, sig: 'rgb', help: 'Set R, G, B values (0-127)' },
+        };
+
+        function updateCodeHtml(html) {
+            // TODO: update in place (but this breaks cursor movement)
+            // var sel = window.getSelection();
+            // var parid = sel.anchorNode ? sel.anchorNode.parentElement.id : null;
+            document.getElementById('syntax').innerHTML = html;
+            // if (sel.anchorNode) {
+            //     var range = document.createRange();
+            //     var el = document.getElementById(parid);
+            //     var txt = el.innerText;
+            //     range.selectNodeContents(el);
+            //     range.collapse(true);
+            //     range.setStart(el, 1);
+            //     var sel2 = window.getSelection();
+            //     sel2.removeAllRanges();
+            //     sel2.addRange(range);
+            // }
+        }
 
         function assemble(source) {
+            var h = '';
+            var id = 0;
+            function addWord(word, cls, tip) {
+                h += '<span id="word' + (id++) + '" class="' + cls + '"' + (tip ? ' title="' + tip + '"' : '') + '>' + word + '</span> ';
+            }
             var asm = [];
-            var errors = '';
             var lines = source.match(/[^\r\n]+/g);
-            for (var l in lines) {
-                var line = lines[l];
-                var words = line.match(/\S+/g);
-                for (var w in words) {
-                    var word = words[w];
-                    if (word == '\\') break;
-                    var i = parseInt(word);
-                    if (!isNaN(i)) {
-                        if (i < 0 || i > 127) {
-                            errors += 'Value out of range error: ' + i + '<br />';
-                            continue;
-                        } else {
-                            asm.push(i);
-                        }
-                    } else {
-                        var dic = dictionary[word];
-                        if (dic) {
-                            asm.push(dic.op);
-                        } else {
-                            errors += 'Unknown word: ' + word + '<br />';
-                            continue;
+            if (lines) {
+                for (var l in lines) {
+                    var line = lines[l];
+                    var words = line.match(/\S+/g);
+                    if (words) {
+                        for (var w = 0; w < words.length; w++) {
+                            var word = words[w];
+                            if (word == '\\') {
+                                for (var j = w; j < words.length; j++) {
+                                    addWord(words[j], 'comment');
+                                }
+                                break;
+                            }
+                            var i = parseInt(word);
+                            if (!isNaN(i)) {
+                                if (i < 0 || i > 127) {
+                                    addWord(word, 'error');
+                                    continue;
+                                } else {
+                                    addWord(word, 'literal');
+                                    asm.push(i);
+                                }
+                            } else {
+                                var dic = dictionary[word];
+                                if (dic) {
+                                    asm.push(dic.op);
+                                    addWord(word, 'word', dic.help);
+                                } else {
+                                    addWord(word, 'error');
+                                    continue;
+                                }
+                            }
                         }
                     }
+                    h = h.substr(0, h.length - 1) + '<br />';
                 }
             }
-            document.getElementById('errors').innerHTML = errors;
+            updateCodeHtml(h);
             return asm;
         }
 
@@ -131,13 +169,13 @@
             return enc;
         }
 
-        function circles(colors) {
+        function flashCodes(colors) {
             if (colors.length > 1) {
                 colors = colors.substr(1, colors.length - 2); // trim off whites
                 var h = "";
                 for (var i in colors) {
                     var c = colors[i];
-                    h += "<span class='" + c + "'>&nbsp;</span>";
+                    h += "<span class='" + c + "'>&nbsp;</span> ";
                 }
                 return h;
             }
@@ -146,8 +184,8 @@
         function update() {
             var source = document.getElementById('source').innerText;
             var code = assemble(source);
-            var colors = circles(encode(code));
-            document.getElementById('asm').innerHTML = code.map(function(x) { return x.toString(16) }).join(' ');
+            var colors = flashCodes(encode(code));
+            document.getElementById('asm').innerHTML = code.map(function (x) { return x.toString(16) }).join(' ');
             document.getElementById('flash').innerHTML = colors;
         }
 
@@ -229,9 +267,9 @@
                             0 0 127 led 100 wait<br />
                             OFF end
                         </div>
-                        <p id="errors"></p>
+                        <p id="syntax" style="text-align: left; padding-left: 0.5em; font-size: small; font-family: monospace"></p>
                         <p id="asm"></p>
-                        <p id="flash"></p>
+                        <p id="flash" style="font-size: 0px"></p>
                     </div>
                     <div id="panel_load" style="display: none">
                         <button id="load">Load</button><br />
@@ -247,6 +285,5 @@
     </body>
 </html>
 <!-- TODO
-* Cancel loading
 * Support negative
 -->
