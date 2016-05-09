@@ -181,6 +181,7 @@ ba f5 97
 
                             case 0x90: dasm += "call "  ; break;
                             case 0x91: dasm += "; "     ; break;
+                            case 0x92: dasm += "sensor "; break;
 
                             case 0x94: dasm += "dup "   ; break;
 

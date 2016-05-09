@@ -6,6 +6,33 @@ This is a pretty cool little line-follower. They publish the ["Static Codes", bu
 
 FlashForth is a simple programming "IDE" [available here](http://ashleyf.github.io/ozobot). Have fun!
 
+Many "Words" in FlashForth correspond directly with Ozobot instructions (see Bytecodes section below). Some words though are macros. These are mainly to construct control structure without having to think about addresses and such.
+
+For example the FlashForth construct `while` ... `do` ... `loop` translates into conditional and unconditional branches to relative addresses.
+
+    while COLOR sensor RED = do 127 -127 wheels loop
+
+Becomes literally:
+
+| Addr |    |            |
+|------|----|------------|
+| 0000 | 0e | COLOR      |
+| 0001 | 92 | sensor     |
+| 0002 | 01 | RED        |
+| 0003 | a4 | =          |
+| 0004 | 80 | if         |
+| 0005 | 0a | +10        |
+| 0006 | 97 | unknown    |
+| 0007 | 7f | 127        |
+| 0008 | 7e | 126        |
+| 0009 | 8b | not (-127) |
+| 0010 | 9f | led        |
+| 0011 | ba | jump       |
+| 0012 | f5 | -11        |
+| 0013 | 97 | unknown    |
+
+Macros execute at compile-time. `while` merely pushes the current address (`0000`) to a compile-time stack. `do` emits an `if` bytecode, pushes the current address (`0005`), and emits a placeholder address along with the (still mysterious) `97` bytecode. Finally, `loop` does all the magic. Now that the extent of the loop body is known, it pops the addresses and emits a `jump` back (`-11` in this case) to the address of the point at which `while` was seen; causing reevaluation of the predicate expression (`COLOR sensor RED =`). It also patches the placeholder address for the `if` to skip over the body (`+10` in this case). It may sound like a funny name to call conditional branch on false, `if`. This comes from Forth and is because of the forms for which this instruction is used. It's essentially a branch on false over the body - meaning `if` true, fall through into the body.
+
 ## Reading Flash Codes
 
 In [OzoBlockly](http://ozoblockly.com/), programs are transmitted to the robot through the color sensor by flashing colors on the screen.
@@ -78,7 +105,81 @@ This program fragment blinks red, then green, then blue, with one-second pauses.
 
 Values less than 128 are considered literals and pushed to the stack. Values of 128 or higher are instructions. You may notice that in OzoBlockly negative values are supported. This is done by emitting a *positive* value (one less than desired) followed by a `not` (`8b` hex) instruction. This gives a range of -128 to +127. FlashForth converts negative literals for you.
 
-#### Bytecodes
+## OzoBlockly Decoded
+
+Going through the various constructs in OzoBlockly, here is the bytecode to which they compile.
+
+### Movement
+
+`Move distance D mm speed S mm/s` is a single bytecode (`9e`) of two parameters `D S move`.
+
+`Rotate angle D deg speed S mm/s` is also a single bytecode (`98`) of two parameters `D S turn`.
+
+`Set wheel speeds: left (mm/s) L right (mm/s) R` as well is a single bytecode (`9f`) of two parameters `L R wheels`.
+
+`Stop motors` is really just `0 0 wheels`.
+
+`Move forward at speed S mm/s until line is found, and then follow the line` is not primitive at all. It actually becomes a whole little program fragment.
+
+    S dup dup wheels ac 08 sensor if -8 delim 96 00 00 wheels c6 01 a0 ac ad 9a 10 = if -3 delim 00 a0 01 25 93 // TODO: Figure this out!
+
+`get surface color` and `surface color C` as used with a comparison operator (`=` for example) is `COLOR sensor C =`. FlashForth has constants for the single-byte values used for `C` (see the help tab [there](http://ashleyf.github.io/ozobot)).
+
+### Line Navigation
+
+None of these are primitive.
+
+`Follow line to next intersection or line end`:
+
+    call 00 09 00 end 01 a0 ac ad 9a 10 = if fd 00 a0 01 25 93 ; // TODO: Figure this out!
+
+`Pick direction D`:
+
+    D call 00 0b 96 00 end dup 10 92 81 not b7 25 92 not b7 1f 93 01 a0 ad 9a 14 = if fd 00 a0 00 25 93 ; // TODO: Figure this out!
+
+Where `D` is `STRAIGHT` (1), `LFET` (2), `RIGHT` (4), or `BACK` (8).
+
+`This is way D`:
+
+    LINE sensor D 81 // TODO: Figure out what 81 is
+
+Where `D` is `STRAIGHT` (1), `LFET` (2), `RIGHT` (4), or `END` (8).
+
+`Set line-following speed S mm/s`:
+
+    S 18 93 // TODO: Figure this out!
+
+`Get line-following speed`:
+
+    18 sensor
+
+`Get intersection/line-end color`:
+
+    0f sensor
+
+`Intersection/line-end color C` is the same as `Surface color C` above. The same FlashForth single-byte values may be used.
+
+### Light Effects
+
+`Set LED color Red R Green G Blue B` is a single bytecode taking three parameters: `R G B led`
+
+`Turn LED off` is just `0 0 0 led` followed by `1e 93`. // TODO: Figure out what `1e 93` means!
+
+`Set random light color` isn't primative: `7f 00 rand 7f 00 rand 7f 00 rand led`
+
+### Timing
+
+`Wait T x 10 ms` is `T wait`.
+
+`Wait S.T second(s)` is not primitive. If only `T` centiseconds are chosen then it's just `T wait`. If `S` seconds are chosen (even though 1 second could be done as a simple `wait`), it becomes a loop:
+
+    S 100 wait 1 - dup 0 > not if -8 delim 96 // TODO: Figure out what 96 is for
+
+If both `S` and `T` are chosen, then it becomes a loop followed by another `wait`:
+
+    S 100 wait 1 - dup 00 > not if -8 delim 96 T wait // TODO: Figure out what 96 is for
+
+## Bytecodes
 
 | Byte |        |                                       |
 |------|--------|---------------------------------------|
@@ -101,20 +202,20 @@ Values less than 128 are considered literals and pushed to the stack. Values of 
 | 0x90 | call   |                                       |
 | 0x91 | ;      | Return                                |
 | 0x92 | sensor |                                       |
-| 0x93 |        |                                       |
+| 0x93 | ?      | Set variable?                         |
 | 0x94 | dup    |                                       |
 | 0x95 |        |                                       |
-| 0x96 |        |                                       |
-| 0x97 | delim? | Unknown purpose. Used in while loops. |
+| 0x96 | ?      |                                       |
+| 0x97 | ?      | Unknown purpose. Used in while loops. |
 | 0x98 | turn   |                                       |
 | 0x99 |        |                                       |
-| 0x9a |        |                                       |
+| 0x9a | ?      |                                       |
 | 0x9b | wait   |                                       |
 | 0x9c | >=     |                                       |
 | 0x9d | >      |                                       |
 | 0x9e | move   |                                       |
 | 0x9f | wheels |                                       |
-| 0xa0 |        |                                       |
+| 0xa0 | ?      |                                       |
 | 0xa1 |        |                                       |
 | 0xa2 |        |                                       |
 | 0xa3 |        |                                       |
@@ -126,8 +227,8 @@ Values less than 128 are considered literals and pushed to the stack. Values of 
 | 0xa9 |        |                                       |
 | 0xaa |        |                                       |
 | 0xab |        |                                       |
-| 0xac |        |                                       |
-| 0xad |        |                                       |
+| 0xac | ?      |                                       |
+| 0xad | ?      |                                       |
 | 0xae | end    |                                       |
 | 0xaf |        |                                       |
 | 0xb0 |        |                                       |
@@ -152,7 +253,7 @@ Values less than 128 are considered literals and pushed to the stack. Values of 
 | 0xc3 |        |                                       |
 | 0xc4 |        |                                       |
 | 0xc5 |        |                                       |
-| 0xc6 |        |                                       |
+| 0xc6 | ?      |                                       |
 | 0xc7 |        |                                       |
 | 0xc8 |        |                                       |
 | 0xc9 |        |                                       |
