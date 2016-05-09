@@ -80,9 +80,10 @@ Values less than 128 are considered literals and pushed to the stack. Values of 
 
 #### Bytecodes
 
-| Byte | |
-|------|-|
-| 0x80 | Test |
+| Byte |     |
+|------|-----|
+| 0x80 | Foo |
+| 0x81 | Bar |
 
 ### Full Example
 
