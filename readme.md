@@ -4,7 +4,7 @@ This is a pretty cool little line-follower. They publish the ["Static Codes", bu
 
 ## FlashForth
 
-A simple programming "IDE" [is available here](http://ashleyf.github.io/ozobot). Have fun!
+FlashForth is a simple programming "IDE" [available here](http://ashleyf.github.io/ozobot). Have fun!
 
 ## Reading Flash Codes
 

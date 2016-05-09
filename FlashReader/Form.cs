@@ -89,6 +89,66 @@ namespace FlashReader
                     {
                         switch(v)
                         {
+                            /* 
+\ yellow, green, while true, red, blue
+7f 7f 00 led  yellow led
+00 7f 00 led  green led
+01            TRUE
+80 12 97      if len ?? (18 skip)
+7f 00 00 led  red led
+40 wait       pause
+00 00 7f led  blue led
+40 wait       pause
+ba f0 97      ?? -16 ??
+00 end 
+
+7f 7f 00 led  yellow led
+00 7f 00 led  green led
+01            TRUE
+80 0c 97      if len ?? (12 skip)
+7f 00 00 led
+40 wait
+ba f6 97      back len+ ?? (-10 loop)
+00 end 
+
+\ while surface=red
+7f 7f 00 led  yellow led
+00 7f 00 led  green led
+0e 92 01 =    COLOR sensor RED =
+80 0c 97      if len ?? (12 skip)
+7f 00 00 led
+40 wait
+ba f3 97      back len+ ?? (-13 loop)
+00 end 
+
+\ white left_open
+10 92 01 81    LINE sensor STRAIGHT ??
+10 92 02 81    LINE sensor LEFT ??
+10 92 04 81    LINE sensor RIGHT ??
+10 92 08 =     LINE sensor LINE_END =
+80 0a 97       ?? len ?? (10 skip)
+7f 00 00 led
+ba f5 97
+00 end 
+
+                            */
+                            //    2d 24 93 00 7f 00 led 01 80 12 97 7f 00 00 led 40 wait 00 00 7f led 40 wait ba f0 97 00 end 
+                            // 1 2 3 4 5 6 7 8 2d 24 93 01 80 12 97 7f 00 00 led 40 wait 00 00 7f led 40 wait ba f0 97 00 end 
+                            //                             ?? >> ??     ?? ?? ?? 
+                            //          93 00 7f 00 led 01 80 18 97 ... ba ea 97 00 end 
+                            //                     00 00 = 80 18 97 ... ba e8 97 00 end 
+                            //                  0e 92 01 = 80 18 97 ... ba e7 97 00 end
+
+                            // 2d 24 93 00 7f 00 led              0e 92 01 = 80 18 97 7f 00 00 led 40 wait 00 00 7f led 40 wait 7f 00 00 led 40 wait ba e7 97 00 end 
+                            // 2d 24 93 7f 7f 00 led 00 7f 00 led 0e 92 01 = 80 18 97 7f 00 00 led 40 wait 00 00 7f led 40 wait 7f 00 00 led 40 wait ba e7 97 00 end 
+                            // 2d 24 93 7f 7f 00 led 00 7f 00 led 0e 92 01 = 80 12 97 7f 00 00 led 40 wait 00 00 7f led 40 wait ba ed 97 00 end 
+                            // 
+                            // loop forever red/blue led
+                            // 01 80 12 97 // 00 80 12 97
+                            // 7f 00 00 led 40 wait
+                            // 00 00 7f led 40 wait
+                            // ba f0 97
+
                             //      01 80 0a 97 ... ba 03 97 // true if ... fi
                             //         80 0c 97 ... ba 03 97 // if ... fi
                             // 92 01 = 80 0a 97 ... ba 03 97 // surface red = if ... fi
@@ -99,7 +159,7 @@ namespace FlashReader
                             // 20 10 01  a9 96 a9 aa 96
 
                             // random light 10x
-                            // 0a 94 00 9d 80 12 97
+                            // 0a  94 00 > 80 12 97
                             // 7f 00 rand
                             // 7f 00 rand
                             // 7f 00 rand
@@ -107,6 +167,7 @@ namespace FlashReader
                             // 01 86 ba ee 97 96
 
                             case 0x8a: dasm += "not "   ; break;
+                            case 0x8b: dasm += "neg "   ; break;
                             case 0x83: dasm += "~ "     ; break;
                             case 0x85: dasm += "+ "     ; break;
                             case 0x86: dasm += "- "     ; break;
@@ -119,12 +180,13 @@ namespace FlashReader
                             case 0x98: dasm += "turn "  ; break;
                             case 0x9b: dasm += "wait "  ; break;
                             case 0x9c: dasm += ">= "    ; break; // <  is >= not
-                            case 0x9d: dasm += "> "     ; break; // <= is >  not
+                            case 0x9d: dasm += "> "     ; break; // <= is > not
                             case 0x9e: dasm += "move "  ; break;
                             case 0x9f: dasm += "wheels "; break;
-                            case 0xa4: dasm += "= "  ; break;
+                            case 0xa4: dasm += "= "     ; break;
                             case 0xa6: dasm += "poke "  ; break;
                             case 0xa7: dasm += "peek "  ; break;
+                            case 0xa8: dasm += "abs "   ; break; // *
                             case 0xae: dasm += "end "   ; break;
                             case 0xb8: dasm += "led "   ; break;
                             default:
