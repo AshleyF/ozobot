@@ -10,7 +10,7 @@ namespace FlashReader
     {
         private Color Sample()
         {
-            const int factor = 2; // for MacBook TODO: API to get this?
+            const int factor = 1; // for MacBook TODO: API to get this?
             var point = PointToScreen(new Point(pictureBox.Left + pictureBox.Width / 2, pictureBox.Top + pictureBox.Height / 2));
             var screen = Screen.FromPoint(point);
             var bmp = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
@@ -166,29 +166,44 @@ ba f5 97
                             // led
                             // 01 86 ba ee 97 96
 
-                            case 0x8a: dasm += "not "   ; break;
-                            case 0x8b: dasm += "neg "   ; break;
+                            case 0x80: dasm += "if "    ; break;
+
                             case 0x83: dasm += "~ "     ; break;
+
                             case 0x85: dasm += "+ "     ; break;
                             case 0x86: dasm += "- "     ; break;
                             case 0x87: dasm += "* "     ; break;
                             case 0x88: dasm += "/ "     ; break;
                             case 0x89: dasm += "mod "   ; break;
+                            case 0x8a: dasm += "not "   ; break;
+                            case 0x8b: dasm += "neg "   ; break;
                             case 0x8c: dasm += "rand "  ; break;
+
                             case 0x90: dasm += "call "  ; break;
-                            case 0x91: dasm += ";   "   ; break;
+                            case 0x91: dasm += "; "     ; break;
+
+                            case 0x94: dasm += "dup "   ; break;
+
+                            case 0x97: dasm += "delim " ; break;
                             case 0x98: dasm += "turn "  ; break;
+
                             case 0x9b: dasm += "wait "  ; break;
                             case 0x9c: dasm += ">= "    ; break; // <  is >= not
                             case 0x9d: dasm += "> "     ; break; // <= is > not
                             case 0x9e: dasm += "move "  ; break;
                             case 0x9f: dasm += "wheels "; break;
+
                             case 0xa4: dasm += "= "     ; break;
+
                             case 0xa6: dasm += "poke "  ; break;
                             case 0xa7: dasm += "peek "  ; break;
                             case 0xa8: dasm += "abs "   ; break; // *
+
                             case 0xae: dasm += "end "   ; break;
+
                             case 0xb8: dasm += "led "   ; break;
+
+                            case 0xba: dasm += "jump "  ; break;
                             default:
                                 if (skip-- <= 0 && i < colors.Length - 6) // skip first 8 (frame, version, length) and last two bytes (checksum, frame)
                                     dasm += String.Format("{0:x2} ", v); break;
