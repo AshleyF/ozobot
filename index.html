@@ -59,6 +59,21 @@
                 asm[ifaddr] = asm.length - ifaddr + 1; // patch `if` address
             }
 
+            function mneq(asm) { // <>
+                asm.push(0xa4); // =
+                asm.push(0x8a); // not
+            }
+
+            function mlt(asm) { // <
+                asm.push(0x9c); // >=
+                asm.push(0x8a); // not
+            }
+
+            function mleq(asm) { // <=
+                asm.push(0x9d); // >
+                asm.push(0x8a); // not
+            }
+
             var dictionary  = {
             'TRUE'    : { op: 1   , sig: '-1'   , help: 'True constant' },
             'FALSE'   : { op: 0   , sig: '-0'   , help: 'False constant' },
@@ -74,11 +89,16 @@
             'dup'     : { op: 0x95, sig: 'x-xx' , help: 'Duplicate top stack value' },
             'turn'    : { op: 0x98, sig: 'as-'  , help: 'Turn angle (deg)/speed (mm/s)' },
             'wait'    : { op: 0x9b, sig: 'x'    , help: 'Wait x centiseconds (x * 10ms)' },
-            '>='      : { op: 0x9c, sig: 'x-x'  , help: 'Greater than or equal. (< is `>= not`)' },
-            '>'       : { op: 0x9d, sig: 'x'    , help: 'Greater than. (<= is `> not`)' },
+            '>='      : { op: 0x9c, sig: 'yx-b' , help: 'Greater than or equal (y >= x)' },
+            '>'       : { op: 0x9d, sig: 'yx-b' , help: 'Greater than (y > x)' },
+            '<'       : { macro: mlt, sig: 'yx-b', help: 'Less than (y < x)' },
+            '<='      : { macro: mleq, sig: 'yx-b', help: 'Less than or equal (y <= x)' },
             'move'    : { op: 0x9e, sig: 'ds-'  , help: 'Move distance (mm, negative for reverse)/speed (mm/s)' },
             'wheels'  : { op: 0x9f, sig: 'lr-'  , help: 'Set left/right wheel speeds (mm/s, negative for reverse)' },
-            '='       : { op: 0xa4, sig: 'yx-'  , help: 'Equality (x = y)' },
+            'and'     : { op: 0xa2, sig: 'yx-b' , help: 'Boolean `and`' },
+            'or'      : { op: 0xa3, sig: 'yx-b' , help: 'Boolean `or`' },
+            '='       : { op: 0xa4, sig: 'yx-b' , help: 'Equality (y = x)' },
+            '<>'      : { macro: mneq, sig: 'yx-b', help: 'Inequality (y <> x)' },
             'abs'     : { op: 0xa8, sig: 'x-x'  , help: 'Absolute value.' },
             'end'     : { op: 0xae, sig: 'm-'   , help: 'End program and switch to mode `m` (see `OFF`, `LINE`, `IDLE`)' },
             'OFF'     : { op: 0   , sig: '-0'   , help: 'Switch robot off. Argument to `end`' },
@@ -180,7 +200,7 @@
         }
 
         function encode(code) {
-            code = [0x2D, 0x24, 0x93].concat(code);
+            // code = [0x2D, 0x24, 0x93].concat(code);
             var enc = 'W';
             function append(i) {
                 function color(i) {
@@ -235,7 +255,7 @@
         }
 
         function getSource() {
-            return document.getElementById('source').innerHTML.replace(/<[^>]+>/g, ' ').replace('&nbsp;', ' ');
+            return document.getElementById('source').innerHTML.replace(/<[^>]+>/g, ' ').replace('&nbsp;', ' ').replace('&gt;', '>').replace('&lt;', '<');
         }
 
         function update() {

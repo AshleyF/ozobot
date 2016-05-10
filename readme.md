@@ -207,7 +207,13 @@ The form `If P do A else if Q do B ...` is no different; just nested:
 
     TRUE if +10 97 255 0 0 led jump +14 97 TRUE if +10 97 0 0 255 led jump +3 97 0 255 0 led
 
-The FlashForth form for this will be the normal Forth-like `P if A then ...` or `P if A else B then ...` or `P if A else Q if B then then ...`. TODO: Document these macros
+The FlashForth form for this is normal Forth-like `P if A then ...` or `P if A else B then ...` or `P if A else Q if B then then ...`. TODO: Document these macros
+
+#### Logic & Comparison
+
+The primitive logic operations are `and` (`a2`), `or` (`a3`) and `not` (`8a`). These appear to be separate from the bitwise operations. A normal Forth would have avoided this by useing -1 (all bits set) for `TRUE`. Ozobot appears to use non-zero, like C. Poor design?
+
+The primitive comparison operations are `=` (`a4`), `>=` (`9c`) and `>` (`9d`). The others are composed of these and `not` (`8a`). Not equal is `= not`, less-than is `>= not` and less-or-equal is `> not`. There are `<>`, `<` and `<=` macros that expand to these in FlashForth.
 
 ## Bytecodes
 
@@ -247,8 +253,8 @@ The FlashForth form for this will be the normal Forth-like `P if A then ...` or 
 | 0x9f | wheels |                                       |
 | 0xa0 | ?      |                                       |
 | 0xa1 |        |                                       |
-| 0xa2 |        |                                       |
-| 0xa3 |        |                                       |
+| 0xa2 | and    |                                       |
+| 0xa3 | or     |                                       |
 | 0xa4 | =      |                                       |
 | 0xa5 |        |                                       |
 | 0xa6 | poke   |                                       |
