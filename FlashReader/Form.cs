@@ -185,7 +185,6 @@ ba f5 97
 
                             case 0x94: dasm += "dup "   ; break;
 
-                            case 0x97: dasm += "delim " ; break;
                             case 0x98: dasm += "turn "  ; break;
 
                             case 0x9b: dasm += "wait "  ; break;

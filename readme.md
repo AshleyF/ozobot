@@ -121,7 +121,7 @@ Going through the various constructs in OzoBlockly, here is the bytecode to whic
 
 `Move forward at speed S mm/s until line is found, and then follow the line` is not primitive at all. It actually becomes a whole little program fragment.
 
-    S dup dup wheels ac 08 sensor if -8 delim 96 00 00 wheels c6 01 a0 ac ad 9a 10 = if -3 delim 00 a0 01 25 93 // TODO: Figure this out!
+    S dup dup wheels ac 08 sensor if -8 97 96 00 00 wheels c6 01 a0 ac ad 9a 10 = if -3 97 00 a0 01 25 93 // TODO: Figure this out!
 
 `get surface color` and `surface color C` as used with a comparison operator (`=` for example) is `COLOR sensor C =`. FlashForth has constants for the single-byte values used for `C` (see the help tab [there](http://ashleyf.github.io/ozobot)).
 
@@ -173,11 +173,41 @@ Where `D` is `STRAIGHT` (1), `LFET` (2), `RIGHT` (4), or `END` (8).
 
 `Wait S.T second(s)` is not primitive. If only `T` centiseconds are chosen then it's just `T wait`. If `S` seconds are chosen (even though 1 second could be done as a simple `wait`), it becomes a loop:
 
-    S 100 wait 1 - dup 0 > not if -8 delim 96 // TODO: Figure out what 96 is for
+    S 100 wait 1 - dup 0 > not if -8 97 96 // TODO: Figure out what 96 is for
 
 If both `S` and `T` are chosen, then it becomes a loop followed by another `wait`:
 
-    S 100 wait 1 - dup 00 > not if -8 delim 96 T wait // TODO: Figure out what 96 is for
+    S 100 wait 1 - dup 00 > not if -8 97 96 T wait // TODO: Figure out what 96 is for
+
+### Terminate
+
+`Terminate program and turn Ozobot off` is `00 end` (`00` = `OFF` in FlashForth)
+
+`Terminate program and continue line following` is `01 end` (`01` = `FOLLOW` in FlashForth)
+
+`Terminate program and switch to idle` is `02 end` (`02` = `IDLE` in FLashForth)
+
+In `IDLE` mode, by the way, it is ready to accept a new program. If we can find a way to cause programs to execute without double pressing power then we could have a very nice, interactive experience with the Ozobot sitting on a tablet while being programmed from another tablet or laptop. Send a command and immediately see the result. Send another. And so on without load/run manual steps.
+
+### Logic
+
+`If P do A ...`. For example `If TRUE do Set light color RED then Set light color GREEN`:
+
+    TRUE if +10 97 255 0 0 led jump +3 97 0 255 0 led
+
+The `if` instruction consumes a predicate result (boolean) and branches on false over the body of the block (`+10` in this case). It's not clear yet what the `97` bytecode does, but apparently the body `jump`s over this to the following code (`0 255 0 led`).
+
+The form `If P do A else B ...` (for example `If TRUE do Set light color RED else Set light color BLUE then Set light color GREEN` becomes:
+
+    TRUE if +10 97 255 0 0 led jump +7 97 0 0 255 led 0 255 0 led
+
+Again, `if` jumps over the main body (into the `else` clause in this case). However, this time the `jump` in the main body skips over the `else` clause. Maybe that's the purpose - the OzoBlockly compiler blindly puts in this jump even without an `else`. Meaningless, but harmless in that case.
+
+The form `If P do A else if Q do B ...` is no different; just nested:
+
+    TRUE if +10 97 255 0 0 led jump +14 97 TRUE if +10 97 0 0 255 led jump +3 97 0 255 0 led
+
+The FlashForth form for this will be the normal Forth-like `P if A then ...` or `P if A else B then ...` or `P if A else Q if B then then ...`. TODO: Document these macros
 
 ## Bytecodes
 
