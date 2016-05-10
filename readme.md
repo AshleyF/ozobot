@@ -209,9 +209,15 @@ The form `If P do A else if Q do B ...` is no different; just nested:
 
 The FlashForth form for this is normal Forth-like `P if A then ...` or `P if A else B then ...` or `P if A else Q if B then then ...`. TODO: Document these macros
 
-#### Logic & Comparison
+The OzoBlockly form `test P if true T if false F` which results in a value (as opposed to `If P do A else B`) becomes:
 
-The primitive logic operations are `and` (`a2`), `or` (`a3`) and `not` (`8a`). These appear to be separate from the bitwise operations. A normal Forth would have avoided this by useing -1 (all bits set) for `TRUE`. Ozobot appears to use non-zero, like C. Poor design?
+    P if +7 97 T jump +4 97 F // TODO: Figure out what 97 is for
+
+If FlashForth, there is no distinction between expresions and statements. This is just `P if T else F then` as usual.
+
+#### Boolean & Comparison
+
+The primitive boolean operations are `and` (`a2`), `or` (`a3`) and `not` (`8a`). These appear to be separate from the bitwise operations. A normal Forth would have avoided this by useing -1 (all bits set) for `TRUE`. Ozobot appears to use non-zero, like C. Poor design?
 
 The primitive comparison operations are `=` (`a4`), `>=` (`9c`) and `>` (`9d`). The others are composed of these and `not` (`8a`). Not equal is `= not`, less-than is `>= not` and less-or-equal is `> not`. There are `<>`, `<` and `<=` macros that expand to these in FlashForth.
 
