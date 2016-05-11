@@ -37,15 +37,33 @@
         <script>
             var compilerStack = [];
 
+            function mif(asm) { // if
+                asm.push(0x80); // if
+                compilerStack.push(asm.length); // mark position of `if` address
+                asm.push(0x0); // placeholder
+                asm.push(0x97); // unknown purpose
+            }
+
+            function melse(asm) { // else
+                var ifaddr = compilerStack.pop();
+                asm.push(0xba); // jump
+                compilerStack.push(asm.length); // mark position of `else` address
+                asm.push(0x0); // placeholder
+                asm.push(0x97); // unknown purpose
+                asm[ifaddr] = asm.length - ifaddr + 1; // patch `if` address
+            }
+
+            function mthen(asm) { // then
+                var addr = compilerStack.pop();
+                asm[addr] = asm.length - addr + 1; // patch `if`/`else` address
+            }
+
             function mwhile(asm) {
                 compilerStack.push(asm.length); // mark beginning of predicate
             }
 
             function mdo(asm) {
-                asm.push(0x80); // if
-                compilerStack.push(asm.length); // mark position of `if` address
-                asm.push(0x0); // placeholder
-                asm.push(0x97); // unknown purpose
+                mif(asm); // `do` is really just another word for `if`, but would look weird in while loops
             }
 
             function mloop(asm) {
@@ -99,7 +117,7 @@
             'or'      : { op: 0xa3, sig: 'yx-b' , help: 'Boolean `or`' },
             '='       : { op: 0xa4, sig: 'yx-b' , help: 'Equality (y = x)' },
             '<>'      : { macro: mneq, sig: 'yx-b', help: 'Inequality (y <> x)' },
-            'abs'     : { op: 0xa8, sig: 'x-x'  , help: 'Absolute value.' },
+            'abs'     : { op: 0xa8, sig: 'x-x'  , help: 'Absolute value' },
             'end'     : { op: 0xae, sig: 'm-'   , help: 'End program and switch to mode `m` (see `OFF`, `LINE`, `IDLE`)' },
             'OFF'     : { op: 0   , sig: '-0'   , help: 'Switch robot off. Argument to `end`' },
             'FOLLOW'  : { op: 1   , sig: '-1'   , help: 'Switch to line following. Argument to `end`' },
@@ -116,11 +134,14 @@
             'CYAN'    : { op: 6   , sig: '-6'   , help: 'Color constant (6). Used with `COLOR sensor`)' },
             'WHITE'   : { op: 7   , sig: '-7'   , help: 'Color constant (7). Used with `COLOR sensor`)' },
             'LINE'    : { op: 10  , sig: '-10'  , help: 'Line sensor constant (10). Used with `sensor` word)' },
-            'STRAIGHT': { op: 1   , sig: '-1'   , help: 'Straight line sensed. Used with `LINE sensor`.' },
-            'LEFT'    : { op: 2   , sig: '-2'   , help: 'Straight line sensed. Used with `LINE sensor`.' },
-            'RIGHT'   : { op: 4   , sig: '-4'   , help: 'Straight line sensed. Used with `LINE sensor`.' },
-            'END'     : { op: 8   , sig: '-8'   , help: 'Straight line sensed. Used with `LINE sensor`.' },
+            'STRAIGHT': { op: 1   , sig: '-1'   , help: 'Straight line sensed. Used with `LINE sensor`' },
+            'LEFT'    : { op: 2   , sig: '-2'   , help: 'Straight line sensed. Used with `LINE sensor`' },
+            'RIGHT'   : { op: 4   , sig: '-4'   , help: 'Straight line sensed. Used with `LINE sensor`' },
+            'END'     : { op: 8   , sig: '-8'   , help: 'Straight line sensed. Used with `LINE sensor`' },
             'BACK'    : { op: 8   , sig: '-8'   , help: 'Direction constant (8)' },
+            'if'      : { macro: mif,    sig: 'b-', help: 'Begin conditional block. [predicate] `if`' },
+            'else'    : { macro: melse,  sig: 'b-', help: 'Conditional `else` clause. [predicate] `if` ... `else` ... `then`' },
+            'then'    : { macro: mthen,  sig: 'b-', help: 'End conditional block (think of as "... and `then` do ..." [predicate] `if` ... `then` or [predicate] `if` ... `else` ... `then`' },
             'while'   : { macro: mwhile, sig: 'b-', help: 'Begin conditional loop predicate. `while` [predicate] `do` ... `loop`' },
             'do'      : { macro: mdo   , sig: '-' , help: 'Begin conditional loop body. <predicate> `while` [predicate] `do` ... `loop`' },
             'loop'    : { macro: mloop , sig: '-' , help: 'End conditional loop. <predicate> `while` [predicate] `do` ... `loop`' },

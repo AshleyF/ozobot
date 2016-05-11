@@ -193,19 +193,19 @@ In `IDLE` mode, by the way, it is ready to accept a new program. If we can find 
 
 `If P do A ...`. For example `If TRUE do Set light color RED then Set light color GREEN`:
 
-    TRUE if +10 97 255 0 0 led jump +3 97 0 255 0 led
+    TRUE if +10 97 127 0 0 led jump +3 97 0 127 0 led
 
-The `if` instruction consumes a predicate result (boolean) and branches on false over the body of the block (`+10` in this case). It's not clear yet what the `97` bytecode does, but apparently the body `jump`s over this to the following code (`0 255 0 led`).
+The `if` instruction consumes a predicate result (boolean) and branches on false over the body of the block (`+10` in this case). It's not clear yet what the `97` bytecode does, but apparently the body `jump`s over this to the following code (`0 127 0 led`).
 
 The form `If P do A else B ...` (for example `If TRUE do Set light color RED else Set light color BLUE then Set light color GREEN` becomes:
 
-    TRUE if +10 97 255 0 0 led jump +7 97 0 0 255 led 0 255 0 led
+    TRUE if +10 97 127 0 0 led jump +7 97 0 0 127 led 0 127 0 led
 
 Again, `if` jumps over the main body (into the `else` clause in this case). However, this time the `jump` in the main body skips over the `else` clause. Maybe that's the purpose - the OzoBlockly compiler blindly puts in this jump even without an `else`. Meaningless, but harmless in that case.
 
 The form `If P do A else if Q do B ...` is no different; just nested:
 
-    TRUE if +10 97 255 0 0 led jump +14 97 TRUE if +10 97 0 0 255 led jump +3 97 0 255 0 led
+    TRUE if +10 97 127 0 0 led jump +14 97 TRUE if +10 97 0 0 127 led jump +3 97 0 127 0 led
 
 The FlashForth form for this is normal Forth-like `P if A then ...` or `P if A else B then ...` or `P if A else Q if B then then ...`. TODO: Document these macros
 
