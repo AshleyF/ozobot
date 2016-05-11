@@ -121,9 +121,9 @@
             'RIGHT'   : { op: 4   , sig: '-4'   , help: 'Straight line sensed. Used with `LINE sensor`.' },
             'END'     : { op: 8   , sig: '-8'   , help: 'Straight line sensed. Used with `LINE sensor`.' },
             'BACK'    : { op: 8   , sig: '-8'   , help: 'Direction constant (8)' },
-            'while'   : { macro: mwhile, sig: 'b-', help: 'Begin conditional loop predicate. `while` <predicate> `do` ... `loop`' },
-            'do'      : { macro: mdo   , sig: '-' , help: 'Begin conditional loop body. <predicate> `while` <predicate> `do` ... `loop`' },
-            'loop'    : { macro: mloop , sig: '-' , help: 'End conditional loop. <predicate> `while` <predicate> `do` ... `loop`' },
+            'while'   : { macro: mwhile, sig: 'b-', help: 'Begin conditional loop predicate. `while` [predicate] `do` ... `loop`' },
+            'do'      : { macro: mdo   , sig: '-' , help: 'Begin conditional loop body. <predicate> `while` [predicate] `do` ... `loop`' },
+            'loop'    : { macro: mloop , sig: '-' , help: 'End conditional loop. <predicate> `while` [predicate] `do` ... `loop`' },
             };
 
         function updateCodeHtml(html) {

@@ -137,13 +137,13 @@ None of these are primitive.
 
     D call 00 0b 96 00 end dup 10 92 81 not b7 25 92 not b7 1f 93 01 a0 ad 9a 14 = if fd 00 a0 00 25 93 ; // TODO: Figure this out!
 
-Where `D` is `STRAIGHT` (1), `LFET` (2), `RIGHT` (4), or `BACK` (8).
+Where `D` is `STRAIGHT` (1), `LEFT` (2), `RIGHT` (4), or `BACK` (8).
 
 `This is way D`:
 
     LINE sensor D 81 // TODO: Figure out what 81 is
 
-Where `D` is `STRAIGHT` (1), `LFET` (2), `RIGHT` (4), or `END` (8).
+Where `D` is `STRAIGHT` (1), `LEFT` (2), `RIGHT` (4), or `END` (8).
 
 `Set line-following speed S mm/s`:
 
@@ -213,7 +213,7 @@ The OzoBlockly form `test P if true T if false F` which results in a value (as o
 
     P if +7 97 T jump +4 97 F // TODO: Figure out what 97 is for
 
-If FlashForth, there is no distinction between expresions and statements. This is just `P if T else F then` as usual.
+In FlashForth, there is no distinction between expresions and statements. This is just `P if T else F then` as usual. The distinction in OzoBlockly is inconsistent anyway. For example, why can't you have an expression yielding a color and use that in `Set light color ...`?
 
 #### Boolean & Comparison
 
