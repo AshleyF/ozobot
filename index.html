@@ -101,8 +101,8 @@
             '*'       : { op: 0x87, sig: 'yx-z' , help: 'Multiplication (x * y)' },
             '/'       : { op: 0x88, sig: 'yx-z' , help: 'Division (x / y)' },
             'mod'     : { op: 0x89, sig: 'yx-z' , help: 'Modulus (x mod y)' },
-            'not'     : { op: 0x8a, sig: 'x-x'  , help: 'Boolean not value' },
-            'neg'     : { op: 0x8b, sig: 'x-x'  , help: 'Negated values value (e.g. used to generate negative literals)' },
+            'not': { op: 0x8a, sig: 'x-x', help: 'Boolean not value' },
+            'neg': { op: 0x8b, sig: 'x-x', help: 'Negate value (e.g. used to generate negative literals)' },
             'rand'    : { op: 0x8c, sig: 'mn-r' , help: 'Random number from n to m' },
             'dup'     : { op: 0x95, sig: 'x-xx' , help: 'Duplicate top stack value' },
             'turn'    : { op: 0x98, sig: 'as-'  , help: 'Turn angle (deg)/speed (mm/s)' },
@@ -393,6 +393,9 @@
                             </li>
                             <li>
                                 <a href="javascript:sample('while TRUE do<br />  127 -127 wheels<br />127 wait<br />-127 127 wheels<br />127 wait<br />loop')">Spin in place</a><br />Spin in place by reversing differential drive wheel speeds.
+                            </li>
+                            <li>
+                                <a href="javascript:sample('while TRUE do<br />COLOR sensor 0 = if 0 0 0 led then<br />COLOR sensor 1 = if 1 0 0 led then<br />COLOR sensor 2 = if 0 1 0 led then<br />COLOR sensor 3 = if 1 1 0 led then<br />COLOR sensor 4 = if 0 0 1 led then<br />COLOR sensor 5 = if 1 0 1 led then<br />COLOR sensor 6 = if 0 1 1 led then<br />COLOR sensor 7 = if 1 1 1 led then<br />loop')">Chameleon</a><br />LED mimics surface color sensor
                             </li>
                         </ul>
                     </div>
