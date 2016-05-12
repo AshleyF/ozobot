@@ -168,6 +168,8 @@
             'while'   : { macro: mwhile   , sig: 'b-', help: 'Begin conditional loop predicate. `while` [predicate] `do` ... `loop`' },
             'do'      : { macro: mdo      , sig: '-' , help: 'Begin conditional loop body. <predicate> `while` [predicate] `do` ... `loop`' },
             'loop'    : { macro: mloop    , sig: '-' , help: 'End conditional loop. <predicate> `while` [predicate] `do` ... `loop`' },
+            'repeat'  : { macro: mrepeat  , sig: '-' , help: 'Begin repeat loopi, `N repeat .. again`' },
+            'again'   : { macro: magain   , sig: '-' , help: 'End repeat loopi, `N repeat .. again`' },
             'forever' : { macro: mforever , sig: '-' , help: 'Begin infinite loop' },
             'continue': { macro: mcontinue, sig: '-' , help: 'End infinite loop' },
             };
@@ -417,10 +419,10 @@
                                 <a href="javascript:sample('127 0 0 led<br />100 wait<br />0 127 0 led<br />100 wait<br />0 0 127 led<br />100 wait<br />OFF end')">Blink red/green/blue</a><br />Blink LED red, then green, then blue with 1 second pauses.
                             </li>
                             <li>
-                                <a href="javascript:sample('while TRUE do<br />  127 -127 wheels<br />127 wait<br />-127 127 wheels<br />127 wait<br />loop')">Spin in place</a><br />Spin in place by reversing differential drive wheel speeds.
+                                <a href="javascript:sample('forever<br />  127 -127 wheels<br />127 wait<br />-127 127 wheels<br />127 wait<br />continue')">Spin in place</a><br />Spin in place by reversing differential drive wheel speeds.
                             </li>
                             <li>
-                                <a href="javascript:sample('while TRUE do<br />COLOR sensor 0 = if 0 0 0 then<br />COLOR sensor 1 = if 1 0 0 then<br />COLOR sensor 2 = if 0 1 0 then<br />COLOR sensor 3 = if 1 1 0 then<br />COLOR sensor 4 = if 0 0 1 then<br />COLOR sensor 5 = if 1 0 1 then<br />COLOR sensor 6 = if 0 1 1 then<br />COLOR sensor 7 = if 1 1 1 then<br />led 20 wait<br />loop')">Chameleon</a><br />LED mimics surface color sensor
+                                <a href="javascript:sample('forever<br />COLOR sensor 0 = if 0 0 0 then<br />COLOR sensor 1 = if 1 0 0 then<br />COLOR sensor 2 = if 0 1 0 then<br />COLOR sensor 3 = if 1 1 0 then<br />COLOR sensor 4 = if 0 0 1 then<br />COLOR sensor 5 = if 1 0 1 then<br />COLOR sensor 6 = if 0 1 1 then<br />COLOR sensor 7 = if 1 1 1 then<br />led 20 wait<br />continue')">Chameleon</a><br />LED mimics surface color sensor
                             </li>
                         </ul>
                     </div>
