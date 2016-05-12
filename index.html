@@ -37,14 +37,14 @@
         <script>
             var compilerStack = [];
 
-            function mif(asm) { // if
+            function mif(asm) { // if .. [else] .. then
                 asm.push(0x80); // if
                 compilerStack.push(asm.length); // mark position of `if` address
                 asm.push(0x0); // placeholder
                 asm.push(0x97); // unknown purpose
             }
 
-            function melse(asm) { // else
+            function melse(asm) { // if .. [else] .. then
                 var ifaddr = compilerStack.pop();
                 asm.push(0xba); // jump
                 compilerStack.push(asm.length); // mark position of `else` address
@@ -53,13 +53,25 @@
                 asm[ifaddr] = asm.length - ifaddr + 1; // patch `if` address
             }
 
-            function mthen(asm) { // then
+            function mthen(asm) { // if .. [else] .. then
                 var addr = compilerStack.pop();
                 asm[addr] = asm.length - addr + 1; // patch `if`/`else` address
             }
 
-            function mwhile(asm) {
+            function mwhile(asm) { // while .. do .. loop
                 compilerStack.push(asm.length); // mark beginning of predicate
+            }
+
+            function mforever(asm) { // forever .. continue
+                compilerStack.push(asm.length); // mark beginning of loop
+            }
+
+            function mcontinue(asm) { // forever .. continue
+                var addr = compilerStack.pop();
+                asm.push(0xba); // jump
+                var back = asm.length - addr - 1;
+                asm.push((~back + 1) & 0xff); // relative back
+                asm.push(0x97); // unknown purpose
             }
 
             function mdo(asm) {
@@ -68,12 +80,7 @@
 
             function mloop(asm) {
                 var ifaddr = compilerStack.pop();
-                var whileaddr = compilerStack.pop();
-                // ba f0 97 - `loop` form (jump -16 ??)
-                asm.push(0xba); // jump
-                var back = asm.length - whileaddr - 1;
-                asm.push((~back + 1) & 0xff); // relative back
-                asm.push(0x97); // unknown purpose
+                mcontinue(asm);
                 asm[ifaddr] = asm.length - ifaddr + 1; // patch `if` address
             }
 
@@ -155,12 +162,14 @@
             'RIGHT'   : { op: 4   , sig: '-4'   , help: 'Straight line sensed. Used with `LINE sensor`' },
             'END'     : { op: 8   , sig: '-8'   , help: 'Straight line sensed. Used with `LINE sensor`' },
             'BACK'    : { op: 8   , sig: '-8'   , help: 'Direction constant (8)' },
-            'if'      : { macro: mif,    sig: 'b-', help: 'Begin conditional block. [predicate] `if`' },
-            'else'    : { macro: melse,  sig: 'b-', help: 'Conditional `else` clause. [predicate] `if` ... `else` ... `then`' },
-            'then'    : { macro: mthen,  sig: 'b-', help: 'End conditional block (think of as "... and `then` do ..." [predicate] `if` ... `then` or [predicate] `if` ... `else` ... `then`' },
-            'while'   : { macro: mwhile, sig: 'b-', help: 'Begin conditional loop predicate. `while` [predicate] `do` ... `loop`' },
-            'do'      : { macro: mdo   , sig: '-' , help: 'Begin conditional loop body. <predicate> `while` [predicate] `do` ... `loop`' },
-            'loop'    : { macro: mloop , sig: '-' , help: 'End conditional loop. <predicate> `while` [predicate] `do` ... `loop`' },
+            'if'      : { macro: mif      , sig: 'b-', help: 'Begin conditional block. [predicate] `if`' },
+            'else'    : { macro: melse    , sig: 'b-', help: 'Conditional `else` clause. [predicate] `if` ... `else` ... `then`' },
+            'then'    : { macro: mthen    , sig: 'b-', help: 'End conditional block (think of as "... and `then` do ..." [predicate] `if` ... `then` or [predicate] `if` ... `else` ... `then`' },
+            'while'   : { macro: mwhile   , sig: 'b-', help: 'Begin conditional loop predicate. `while` [predicate] `do` ... `loop`' },
+            'do'      : { macro: mdo      , sig: '-' , help: 'Begin conditional loop body. <predicate> `while` [predicate] `do` ... `loop`' },
+            'loop'    : { macro: mloop    , sig: '-' , help: 'End conditional loop. <predicate> `while` [predicate] `do` ... `loop`' },
+            'forever' : { macro: mforever , sig: '-' , help: 'Begin infinite loop' },
+            'continue': { macro: mcontinue, sig: '-' , help: 'End infinite loop' },
             };
 
         function updateCodeHtml(html) {
