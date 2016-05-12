@@ -227,7 +227,7 @@ The primitive comparison operations are `=` (`a4`), `>=` (`9c`) and `>` (`9d`). 
 
     ... jump -X 97
 
-This could be accomplished in FlashForth with `TRUE while ... loop`, but it saves a few bytes to use `forever ... continue` which emits exactle the above with no conditional.
+This could be accomplished in FlashForth with `while TRUE do ... loop`, but it saves five bytes to use `forever ... continue` which emits exactle the above with no conditional.
 
 `Repeat N times do ...` becomes:
 
