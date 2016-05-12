@@ -63,10 +63,10 @@
                 compilerStack.push(0); // indicate `while`
             }
 
-            function mendwhile(asm) // while .. do .. loop
-		var ifaddr = compilerStack.pop();
-		mcontinue(asm);
-		asm[ifaddr] = asm.length - ifaddr + 1; // patch `if` address
+            function mendwhile(asm) { // while .. do .. loop
+                var ifaddr = compilerStack.pop();
+                mcontinue(asm);
+                asm[ifaddr] = asm.length - ifaddr + 1; // patch `if` address
             }
 
             function mforever(asm) { // forever .. continue
