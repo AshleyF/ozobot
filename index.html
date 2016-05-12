@@ -77,6 +77,21 @@
                 asm[ifaddr] = asm.length - ifaddr + 1; // patch `if` address
             }
 
+            function mrepeat(asm) { // repeat
+                mwhile(asm);    // while
+                asm.push(0x94); // dup
+                asm.push(1);    // 1
+                asm.push(0x86); // -
+                asm.push(0);    // 0
+                asm.push(0x9c); // >=
+                mdo(asm);       // do
+            }
+
+            function magain(asm) { // again
+                mloop(asm);     // loop
+                asm.push(0x96); // drop
+            }
+
             function mneq(asm) { // <>
                 asm.push(0xa4); // =
                 asm.push(0x8a); // not
@@ -104,7 +119,8 @@
             'not': { op: 0x8a, sig: 'x-x', help: 'Boolean not value' },
             'neg': { op: 0x8b, sig: 'x-x', help: 'Negate value (e.g. used to generate negative literals)' },
             'rand'    : { op: 0x8c, sig: 'mn-r' , help: 'Random number from n to m' },
-            'dup'     : { op: 0x95, sig: 'x-xx' , help: 'Duplicate top stack value' },
+            'dup'     : { op: 0x94, sig: 'x-xx' , help: 'Duplicate top stack value' },
+            'drop'    : { op: 0x96, sig: 'x-'   , help: 'Drop top stack value' },
             'turn'    : { op: 0x98, sig: 'as-'  , help: 'Turn angle (deg)/speed (mm/s)' },
             'wait'    : { op: 0x9b, sig: 'x'    , help: 'Wait x centiseconds (x * 10ms)' },
             '>='      : { op: 0x9c, sig: 'yx-b' , help: 'Greater than or equal (y >= x)' },

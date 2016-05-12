@@ -221,138 +221,214 @@ The primitive boolean operations are `and` (`a2`), `or` (`a3`) and `not` (`8a`).
 
 The primitive comparison operations are `=` (`a4`), `>=` (`9c`) and `>` (`9d`). The others are composed of these and `not` (`8a`). Not equal is `= not`, less-than is `>= not` and less-or-equal is `> not`. There are `<>`, `<` and `<=` macros that expand to these in FlashForth.
 
+### Loops
+
+`Repeat N times do ...` becomes:
+
+    N dup 0 > if +X 97 ... 1 - jump -Y 97 drop
+
+Where `+X` is a relative jump to just past the `jump` (to the `97` byte) and `-Y` is a relative jump back to the predicate (the `dup`). Equivalently in FlashForth:
+
+    N while dup 0 > do ... 1 - loop drop
+
+Or more, idomatically (but different byte order):
+
+    N while dup 1 - 0 >= do ... loop drop
+
+There is a `repeat` macro that expands to `while dup 1 - 0 >= do` and a `again` macro expanding to `loop drop`, making it simply:
+
+    N repeat ... again
+
+### Math
+
+Arithemetic operations are all of the form `Y X [op]` where `[op]` is `+` (`0x85`), `-` (`0x86`), `*` (`0x87`), `/` (`0x88`) or `mod` (`0x89`). The verbose `remainder of X / Y` in OzoBlockly is just `mod` of course.
+
+The unary operations are of the form `X [op]` where `[op]` is `abs`olute value (`0xa8`) and `neg`ate sign (`0x8b`).
+
+`X is odd` becomes `X 2 mod`
+`X is even` becomes `X 2 mod not`
+`X is positive` becomes `X 0 >`
+`X is negative` becomes `0 X >`
+`X is divisible by Y` becomes `X Y mod not`
+
+`Constrain X low L high H` becomes:
+
+    H L X a9 drop a9 aa drop // TODO: figure out what `a9` and `aa` do
+
+`Random integer from N to M` becomes `N M rand` (`0x8c`).
+
+`Change V by N` gives a clue into how variables work (and how `sensor` may actually be sampling a "virtual variable"?):
+
+    V sensor 1 + V 93
+
+### Variables
+
+`Set V to X` becomes `X V set` (`0x93`). `V` begins at `25`.
+
+`Set foo to X Set bar to Y Set baz to Z` becomes `X 25 set Y 26 set Z 27 set` with increasing variable numbers assigned (starting with `25`).
+
+By the way, it turns out that the `2d 24 93` we see at the start of every program from OzoBlockly is setting variable `24` to `2d` for some reason. A mystery still... Programs seem to behave fine without it and for now FlashForth doesn't emit this.
+
+`Get V` becomes `25 get` (`0x92`). This instruction is also given the name `sensor` because, apparently, sensor values are store in variables. For example the `COLOR` sensor is variable `14`, then `LINE` sensor is `15`, etc.
+
+### Functions
+
+The bytecode includes `call` (`0x90`) and `;` (return - `0x91`). The `call` instruction takes the next two bytes as an address.
+
+An example pair of functions and calls, `To R Set light color RED, To G Set light color GREEN, do R, do G` translates to:
+
+    call 00 0b call 00 10 00 end 7f 00 00 led ; 00 7f 00 led ; 
+
+So the two functions are packed at the end (`7f 00 00 led ;` and `00 7f 00 led ;`) with returns after each. The program then begins with `call`s to these by address (`000b`, `0010`). Notice that there must be a termination (`00 end`) or else the program would fall through into the first function!
+
+#### Parameter Passing
+
+    03 02 01 call 00 0d 03 pop 00 end 00 a5 01 a5 02 a5 led ;
+
+#### Return Values
+
+    03 02 01 call 00 0f 02 pop 25 93 00 end 00 peek 01 peek 02 peek led 40 02 push ;
+
+The `If P return X` form in OzoBlockly embeds: `P if 07 97 X 02 push ;` // TODO: figure out what `97` is for
+
+## Interesting Programs
+
+`zigzag`:
+
+
+
 ## Bytecodes
 
-| Byte |        |                                       |
-|------|--------|---------------------------------------|
-| 0x80 | if     |                                       |
-| 0x81 |        |                                       |
-| 0x82 |        |                                       |
-| 0x83 | ~      |                                       |
-| 0x84 |        |                                       |
-| 0x85 | +      |                                       |
-| 0x86 | -      |                                       |
-| 0x87 | *      |                                       |
-| 0x88 | /      |                                       |
-| 0x89 | mod    |                                       |
-| 0x8a | not    |                                       |
-| 0x8b | neg    |                                       |
-| 0x8c | rand   |                                       |
-| 0x8d |        |                                       |
-| 0x8e |        |                                       |
-| 0x8f |        |                                       |
-| 0x90 | call   |                                       |
-| 0x91 | ;      | Return                                |
-| 0x92 | sensor |                                       |
-| 0x93 | ?      | Set variable?                         |
-| 0x94 | dup    |                                       |
-| 0x95 |        |                                       |
-| 0x96 | ?      |                                       |
-| 0x97 | ?      | Unknown purpose. Used in while loops. |
-| 0x98 | turn   |                                       |
-| 0x99 |        |                                       |
-| 0x9a | ?      |                                       |
-| 0x9b | wait   |                                       |
-| 0x9c | >=     |                                       |
-| 0x9d | >      |                                       |
-| 0x9e | move   |                                       |
-| 0x9f | wheels |                                       |
-| 0xa0 | ?      |                                       |
-| 0xa1 |        |                                       |
-| 0xa2 | and    |                                       |
-| 0xa3 | or     |                                       |
-| 0xa4 | =      |                                       |
-| 0xa5 |        |                                       |
-| 0xa6 | poke   |                                       |
-| 0xa7 | peek   |                                       |
-| 0xa8 | abs    |                                       |
-| 0xa9 |        |                                       |
-| 0xaa |        |                                       |
-| 0xab |        |                                       |
-| 0xac | ?      |                                       |
-| 0xad | ?      |                                       |
-| 0xae | end    |                                       |
-| 0xaf |        |                                       |
-| 0xb0 |        |                                       |
-| 0xb1 |        |                                       |
-| 0xb2 |        |                                       |
-| 0xb3 |        |                                       |
-| 0xb4 |        |                                       |
-| 0xb5 |        |                                       |
-| 0xb6 |        |                                       |
-| 0xb7 |        |                                       |
-| 0xb8 | led    |                                       |
-| 0xb9 |        |                                       |
-| 0xba | jump   |                                       |
-| 0xbb |        |                                       |
-| 0xbc |        |                                       |
-| 0xbd |        |                                       |
-| 0xbe |        |                                       |
-| 0xbf |        |                                       |
-| 0xc0 |        |                                       |
-| 0xc1 |        |                                       |
-| 0xc2 |        |                                       |
-| 0xc3 |        |                                       |
-| 0xc4 |        |                                       |
-| 0xc5 |        |                                       |
-| 0xc6 | ?      |                                       |
-| 0xc7 |        |                                       |
-| 0xc8 |        |                                       |
-| 0xc9 |        |                                       |
-| 0xca |        |                                       |
-| 0xcb |        |                                       |
-| 0xcc |        |                                       |
-| 0xcd |        |                                       |
-| 0xce |        |                                       |
-| 0xcf |        |                                       |
-| 0xd0 |        |                                       |
-| 0xd1 |        |                                       |
-| 0xd2 |        |                                       |
-| 0xd3 |        |                                       |
-| 0xd4 |        |                                       |
-| 0xd5 |        |                                       |
-| 0xd6 |        |                                       |
-| 0xd7 |        |                                       |
-| 0xd8 |        |                                       |
-| 0xd9 |        |                                       |
-| 0xda |        |                                       |
-| 0xdb |        |                                       |
-| 0xdc |        |                                       |
-| 0xdd |        |                                       |
-| 0xde |        |                                       |
-| 0xdf |        |                                       |
-| 0xe0 |        |                                       |
-| 0xe1 |        |                                       |
-| 0xe2 |        |                                       |
-| 0xe3 |        |                                       |
-| 0xe4 |        |                                       |
-| 0xe5 |        |                                       |
-| 0xe6 |        |                                       |
-| 0xe7 |        |                                       |
-| 0xe8 |        |                                       |
-| 0xe9 |        |                                       |
-| 0xea |        |                                       |
-| 0xeb |        |                                       |
-| 0xec |        |                                       |
-| 0xed |        |                                       |
-| 0xee |        |                                       |
-| 0xef |        |                                       |
-| 0xf0 |        |                                       |
-| 0xf1 |        |                                       |
-| 0xf2 |        |                                       |
-| 0xf3 |        |                                       |
-| 0xf4 |        |                                       |
-| 0xf5 |        |                                       |
-| 0xf6 |        |                                       |
-| 0xf7 |        |                                       |
-| 0xf8 |        |                                       |
-| 0xf9 |        |                                       |
-| 0xfa |        |                                       |
-| 0xfb |        |                                       |
-| 0xfc |        |                                       |
-| 0xfd |        |                                       |
-| 0xfe |        |                                       |
-| 0xff |        |                                       |
+| Byte |            |                                       |
+|------|------------|---------------------------------------|
+| 0x80 | if         |                                       |
+| 0x81 |            |                                       |
+| 0x82 |            |                                       |
+| 0x83 | ~          |                                       |
+| 0x84 |            |                                       |
+| 0x85 | +          |                                       |
+| 0x86 | -          |                                       |
+| 0x87 | *          |                                       |
+| 0x88 | /          |                                       |
+| 0x89 | mod        |                                       |
+| 0x8a | not        |                                       |
+| 0x8b | neg        | Reverse sign                          |
+| 0x8c | rand       |                                       |
+| 0x8d |            |                                       |
+| 0x8e |            |                                       |
+| 0x8f |            |                                       |
+| 0x90 | call       |                                       |
+| 0x91 | ;          | Return                                |
+| 0x92 | get/sensor | Get variable/sensor                   |
+| 0x93 | set        | Set variable                          |
+| 0x94 | dup        |                                       |
+| 0x95 |            |                                       |
+| 0x96 | drop       |                                       |
+| 0x97 | ?          | Unknown purpose. Used in while loops. |
+| 0x98 | turn       |                                       |
+| 0x99 |            |                                       |
+| 0x9a | ?          |                                       |
+| 0x9b | wait       |                                       |
+| 0x9c | >=         |                                       |
+| 0x9d | >          |                                       |
+| 0x9e | move       |                                       |
+| 0x9f | wheels     |                                       |
+| 0xa0 | ?          |                                       |
+| 0xa1 |            |                                       |
+| 0xa2 | and        |                                       |
+| 0xa3 | or         |                                       |
+| 0xa4 | =          |                                       |
+| 0xa5 | peek       |                                       |
+| 0xa6 | push       |                                       |
+| 0xa7 | pop        |                                       |
+| 0xa8 | abs        |                                       |
+| 0xa9 | ?          |                                       |
+| 0xaa | ?          |                                       |
+| 0xab |            |                                       |
+| 0xac | ?          |                                       |
+| 0xad | ?          |                                       |
+| 0xae | end        |                                       |
+| 0xaf |            |                                       |
+| 0xb0 |            |                                       |
+| 0xb1 |            |                                       |
+| 0xb2 |            |                                       |
+| 0xb3 |            |                                       |
+| 0xb4 |            |                                       |
+| 0xb5 |            |                                       |
+| 0xb6 |            |                                       |
+| 0xb7 |            |                                       |
+| 0xb8 | led        |                                       |
+| 0xb9 |            |                                       |
+| 0xba | jump       |                                       |
+| 0xbb |            |                                       |
+| 0xbc |            |                                       |
+| 0xbd |            |                                       |
+| 0xbe |            |                                       |
+| 0xbf |            |                                       |
+| 0xc0 |            |                                       |
+| 0xc1 |            |                                       |
+| 0xc2 |            |                                       |
+| 0xc3 |            |                                       |
+| 0xc4 |            |                                       |
+| 0xc5 |            |                                       |
+| 0xc6 | ?          |                                       |
+| 0xc7 | kill       | Causes starter pack Ozobots to die    |
+| 0xc8 |            |                                       |
+| 0xc9 |            |                                       |
+| 0xca |            |                                       |
+| 0xcb |            |                                       |
+| 0xcc |            |                                       |
+| 0xcd |            |                                       |
+| 0xce |            |                                       |
+| 0xcf |            |                                       |
+| 0xd0 |            |                                       |
+| 0xd1 |            |                                       |
+| 0xd2 |            |                                       |
+| 0xd3 |            |                                       |
+| 0xd4 |            |                                       |
+| 0xd5 |            |                                       |
+| 0xd6 |            |                                       |
+| 0xd7 |            |                                       |
+| 0xd8 |            |                                       |
+| 0xd9 |            |                                       |
+| 0xda |            |                                       |
+| 0xdb |            |                                       |
+| 0xdc |            |                                       |
+| 0xdd |            |                                       |
+| 0xde |            |                                       |
+| 0xdf |            |                                       |
+| 0xe0 |            |                                       |
+| 0xe1 |            |                                       |
+| 0xe2 |            |                                       |
+| 0xe3 |            |                                       |
+| 0xe4 |            |                                       |
+| 0xe5 |            |                                       |
+| 0xe6 |            |                                       |
+| 0xe7 |            |                                       |
+| 0xe8 |            |                                       |
+| 0xe9 |            |                                       |
+| 0xea |            |                                       |
+| 0xeb |            |                                       |
+| 0xec |            |                                       |
+| 0xed |            |                                       |
+| 0xee |            |                                       |
+| 0xef |            |                                       |
+| 0xf0 |            |                                       |
+| 0xf1 |            |                                       |
+| 0xf2 |            |                                       |
+| 0xf3 |            |                                       |
+| 0xf4 |            |                                       |
+| 0xf5 |            |                                       |
+| 0xf6 |            |                                       |
+| 0xf7 |            |                                       |
+| 0xf8 |            |                                       |
+| 0xf9 |            |                                       |
+| 0xfa |            |                                       |
+| 0xfb |            |                                       |
+| 0xfc |            |                                       |
+| 0xfd |            |                                       |
+| 0xfe |            |                                       |
+| 0xff |            |                                       |
 
 ### Full Example
 

@@ -10,7 +10,7 @@ namespace FlashReader
     {
         private Color Sample()
         {
-            const int factor = 2; // 2 for MacBook TODO: API to get this?
+            const int factor = 1; // 2 for MacBook TODO: API to get this?
             var point = PointToScreen(new Point(pictureBox.Left + pictureBox.Width / 2, pictureBox.Top + pictureBox.Height / 2));
             var screen = Screen.FromPoint(point);
             var bmp = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
@@ -70,7 +70,7 @@ namespace FlashReader
             {
                 var dasm = "";
                 var v = 0;
-                var skip = 8;
+                var skip = 0; // 8
                 for (var i = 0; i < colors.Length; i++)
                 {
                     var c = colors[i];
@@ -104,9 +104,11 @@ namespace FlashReader
 
                             case 0x90: dasm += "call "  ; break;
                             case 0x91: dasm += "; "     ; break;
-                            case 0x92: dasm += "sensor "; break;
-
+                            case 0x92: dasm += "get "   ; break;
+                            case 0x93: dasm += "set "   ; break;
                             case 0x94: dasm += "dup "   ; break;
+
+                            case 0x96: dasm += "drop "  ; break;
 
                             case 0x98: dasm += "turn "  ; break;
 
@@ -119,9 +121,9 @@ namespace FlashReader
                             case 0xa2: dasm += "and "   ; break;
                             case 0xa3: dasm += "or "    ; break;
                             case 0xa4: dasm += "= "     ; break;
-
-                            case 0xa6: dasm += "poke "  ; break;
-                            case 0xa7: dasm += "peek "  ; break;
+                            case 0xa5: dasm += "peek "  ; break;
+                            case 0xa6: dasm += "push "  ; break;
+                            case 0xa7: dasm += "pop "   ; break;
                             case 0xa8: dasm += "abs "   ; break; // *
 
                             case 0xae: dasm += "end "   ; break;
