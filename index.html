@@ -60,28 +60,26 @@
 
             function mwhile(asm) { // while .. do .. loop
                 compilerStack.push(asm.length); // mark beginning of predicate
+                compilerStack.push(0); // indicate `while`
+            }
+
+            function mendwhile(asm) // while .. do .. loop
+		var ifaddr = compilerStack.pop();
+		mcontinue(asm);
+		asm[ifaddr] = asm.length - ifaddr + 1; // patch `if` address
             }
 
             function mforever(asm) { // forever .. continue
                 compilerStack.push(asm.length); // mark beginning of loop
+                compilerStack.push(1); // indicate `forever`
             }
 
-            function mcontinue(asm) { // forever .. continue
+            function mendforever(asm) { // forever .. loop
                 var addr = compilerStack.pop();
                 asm.push(0xba); // jump
                 var back = asm.length - addr - 1;
                 asm.push((~back + 1) & 0xff); // relative back
                 asm.push(0x97); // unknown purpose
-            }
-
-            function mdo(asm) {
-                mif(asm); // `do` is really just another word for `if`, but would look weird in while loops
-            }
-
-            function mloop(asm) {
-                var ifaddr = compilerStack.pop();
-                mcontinue(asm);
-                asm[ifaddr] = asm.length - ifaddr + 1; // patch `if` address
             }
 
             function mrepeat(asm) { // repeat
@@ -92,11 +90,32 @@
                 asm.push(0);    // 0
                 asm.push(0x9c); // >=
                 mdo(asm);       // do
+                compilerStack.push(2); // indicate `repeat`
             }
 
-            function magain(asm) { // again
+            function mendrepeat(asm) { // repeat .. loop
                 mloop(asm);     // loop
                 asm.push(0x96); // drop
+            }
+
+            function mdo(asm) {
+                mif(asm); // `do` is really just another word for `if`, but would look weird in while loops
+            }
+
+            function mloop(asm) {
+                var kind = compilerStack.pop();
+                switch (kind) {
+                    case 0: // while
+                        mendwhile(asm);
+                        break;
+                    case 1: // forever
+                        mendforever(asm);
+                        break;
+                    case 2: // repeat
+                        mendrepeat(asm);
+                        break;
+                    default: throw 'Unknown loop kind: ' + kind;
+                }
             }
 
             function mneq(asm) { // <>
@@ -167,11 +186,9 @@
             'then'    : { macro: mthen    , sig: 'b-', help: 'End conditional block (think of as "... and `then` do ..." [predicate] `if` ... `then` or [predicate] `if` ... `else` ... `then`' },
             'while'   : { macro: mwhile   , sig: 'b-', help: 'Begin conditional loop predicate. `while` [predicate] `do` ... `loop`' },
             'do'      : { macro: mdo      , sig: '-' , help: 'Begin conditional loop body. <predicate> `while` [predicate] `do` ... `loop`' },
+            'repeat'  : { macro: mrepeat  , sig: '-' , help: 'Begin repeat loopi, `N repeat .. loop`' },
+            'forever' : { macro: mforever , sig: '-' , help: 'Begin infinite loop. `forever .. loop`' },
             'loop'    : { macro: mloop    , sig: '-' , help: 'End conditional loop. <predicate> `while` [predicate] `do` ... `loop`' },
-            'repeat'  : { macro: mrepeat  , sig: '-' , help: 'Begin repeat loopi, `N repeat .. again`' },
-            'again'   : { macro: magain   , sig: '-' , help: 'End repeat loopi, `N repeat .. again`' },
-            'forever' : { macro: mforever , sig: '-' , help: 'Begin infinite loop' },
-            'continue': { macro: mcontinue, sig: '-' , help: 'End infinite loop' },
             };
 
         function updateCodeHtml(html) {
@@ -419,10 +436,10 @@
                                 <a href="javascript:sample('127 0 0 led<br />100 wait<br />0 127 0 led<br />100 wait<br />0 0 127 led<br />100 wait<br />OFF end')">Blink red/green/blue</a><br />Blink LED red, then green, then blue with 1 second pauses.
                             </li>
                             <li>
-                                <a href="javascript:sample('forever<br />  127 -127 wheels<br />127 wait<br />-127 127 wheels<br />127 wait<br />continue')">Spin in place</a><br />Spin in place by reversing differential drive wheel speeds.
+                                <a href="javascript:sample('forever<br />127 -127 wheels<br />127 wait<br />-127 127 wheels<br />127 wait<br />loop')">Spin in place</a><br />Spin in place by reversing differential drive wheel speeds.
                             </li>
                             <li>
-                                <a href="javascript:sample('forever<br />COLOR sensor 0 = if 0 0 0 then<br />COLOR sensor 1 = if 1 0 0 then<br />COLOR sensor 2 = if 0 1 0 then<br />COLOR sensor 3 = if 1 1 0 then<br />COLOR sensor 4 = if 0 0 1 then<br />COLOR sensor 5 = if 1 0 1 then<br />COLOR sensor 6 = if 0 1 1 then<br />COLOR sensor 7 = if 1 1 1 then<br />led 20 wait<br />continue')">Chameleon</a><br />LED mimics surface color sensor
+                                <a href="javascript:sample('forever<br />COLOR sensor 0 = if 0 0 0 then<br />COLOR sensor 1 = if 1 0 0 then<br />COLOR sensor 2 = if 0 1 0 then<br />COLOR sensor 3 = if 1 1 0 then<br />COLOR sensor 4 = if 0 0 1 then<br />COLOR sensor 5 = if 1 0 1 then<br />COLOR sensor 6 = if 0 1 1 then<br />COLOR sensor 7 = if 1 1 1 then<br />led 20 wait<br />loop')">Chameleon</a><br />LED mimics surface color sensor
                             </li>
                         </ul>
                     </div>
