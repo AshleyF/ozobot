@@ -295,7 +295,7 @@ The `If P return X` form in OzoBlockly embeds: `P if 07 97 X 02 push ;` // TODO:
 
 `zigzag`:
 
-
+    01 03 >= 00 3f 2d 24 set 2d call 00 0a drop 00 end 2c ~ 00 peek turn 0a 00 peek move 02 dup 00 > if 19 97 5a 00 peek turn 14 00 peek move 59 ~ 00 peek turn 14 00 peek move 01 - jump e7 97 drop 5a 00 peek turn 0a 00 peek move 2c ~ 00 peek turn ; 
 
 ## Bytecodes
 
