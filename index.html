@@ -86,9 +86,9 @@
 
             function mrepeat(asm) { // repeat
                 mwhile(asm);    // while
-                asm.push(0x94); // dup
                 asm.push(1);    // 1
                 asm.push(0x86); // -
+                asm.push(0x94); // dup
                 asm.push(0);    // 0
                 asm.push(0x9c); // >=
                 mdo(asm);       // do
