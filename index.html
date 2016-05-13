@@ -320,7 +320,7 @@
         }
 
         function getSource() {
-            return document.getElementById('source').innerHTML.replace(/<[^>]+>/g, ' ').replace('&nbsp;', ' ').replace('&gt;', '>').replace('&lt;', '<');
+            return document.getElementById('source').innerHTML.replace(/<[^>]+>/g, ' ').replace('&gt;', '>').replace('&lt;', '<').replace(/&[^;]+;/g, ' ');
         }
 
         function update() {
