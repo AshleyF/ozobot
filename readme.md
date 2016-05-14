@@ -4,7 +4,7 @@ This is a pretty cool little line-follower. They publish the ["Static Codes", bu
 
 ## FlashForth
 
-FlashForth is a simple programming "IDE" [available here](http://ashleyf.github.io/ozobot). Have fun!
+FlashForth is my first cut at a simple programming "IDE" [available here](http://ashleyf.github.io/ozobot). Have fun!
 
 Many "Words" in FlashForth correspond directly with Ozobot instructions (see Bytecodes section below). Some words though are macros. These are mainly to construct control structure without having to think about addresses and such.
 
@@ -31,21 +31,23 @@ Becomes literally:
 | 0012 | f5 | -11        |
 | 0013 | 97 | unknown    |
 
-Macros execute at compile-time. `while` merely pushes the current address (`0000`) to a compile-time stack. `do` emits an `if` bytecode, pushes the current address (`0005`), and emits a placeholder address along with the (still mysterious) `97` bytecode. Finally, `loop` does all the magic. Now that the extent of the loop body is known, it pops the addresses and emits a `jump` back (`-11` in this case) to the address of the point at which `while` was seen; causing reevaluation of the predicate expression (`COLOR sensor RED =`). It also patches the placeholder address for the `if` to skip over the body (`+10` in this case). It may sound like a funny name to call conditional branch on false, `if`. This comes from Forth and is because of the forms for which this instruction is used. It's essentially a branch on false over the body - meaning `if` true, fall through into the body.
+Macros execute at compile-time. `while` merely pushes the current address (`0000`) to a compile-time stack. `do` emits an `if` bytecode, pushes the current address (`0005`), and emits a placeholder address along with the (still mysterious) `97` bytecode. Finally, `loop` does all the magic. Now that the extent of the loop body is known, it pops the addresses and emits a `jump` back (`-11` in this case) to the address of the point at which `while` was seen; causing reevaluation of the predicate expression (`COLOR sensor RED =`). It also patches the placeholder address for the `if` to skip over the body (`+10` in this case). Notice that this means that FlashForth can be compiled in one pass. Also, by the way, notice that `-127` automatically becomes `126 not`.
+
+It may sound like a funny name to call conditional branch on false, `if`. This comes from Forth and is because of the forms for which this instruction is used. It's essentially a branch on false over the body - meaning `if` true, fall through into the body.
 
 ## Reading Flash Codes
 
-In [OzoBlockly](http://ozoblockly.com/), programs are transmitted to the robot through the color sensor by flashing colors on the screen.
+In [OzoBlockly](http://ozoblockly.com/), programs are transmitted to the robot through the color sensor by flashing colors on the screen (or, an interesting idea is to flash an LED at it, or even to have one Ozobot flash to another!). These are the kinds of ideas that can be explored once the protocol is known and can be used outside of the, nice but very sandboxed, OzoBlockly.
 
 * Colors: White, R, G, B, C, M, Y, K (black)
 * Framerate: 20Hz (50ms apart)
 * No repeating colors (robot detects *change* in color rather than timing)
 
-Scrubbing through a high frame rate video, it's clear that the colors being used are primary White, Red, Green, Blue, Cyan, Magenta, Yellow and Black. Presumably it uses an RGB sensor and these are all composed of full on/off RGB channels - very easy to detect. Further analyzing the video (and logging a capture with [`FlashReader`](FlashReader)) it is clearly a 20Hz frame rate. A further observation is that colors never repeat. That is, a *different* color is shown every 50ms.
+Scrubbing through a high-frame-rate video, it's clear that the colors being used are primary Red, Green, Blue, Cyan, Magenta, Yellow, plus White and Black. Presumably it uses an RGB sensor and these are all composed of full on/off RGB channels - very easy to detect. Further analyzing the video (and logging a capture with [`FlashReader`](FlashReader)) it is clearly a 20Hz frame rate. A further observation is that colors never repeat. That is, a *different* color is shown every 50ms.
 
 ### Encoding Values
 
-By flashing the same program with parameters in increasing values we can glean the numbering scheme. It appears to be a base-7 encoding (due to no repeats within set of 8 colors) and appears to line up on byte-sized boundaries encoded as sets of three colors. In BGR space, the colors are just 3-bit values:
+By experimenting with values being sent we glean the numbering scheme. It appears to be a base-7 encoding (due to no repeats within set of 8 colors) and appears to line up on byte-sized boundaries encoded as sets of three colors. In BGR space, the colors are just 3-bit values:
 
 * 0 000 Black
 * 1 001 Red
@@ -63,7 +65,7 @@ Programs are "framed" by:
 
 * `CRY CYM CRW ... CMW`
 
-The first three and the last "word" are CRY CYM CRW followed by a sequence of encoded bytes and finally CMW. These decode to values outside of a single byte range (hex 130, 140, 12E and 14E). Everything between however seems to always decode to bytes. We will consider this a "framing" protocol. Just a sequence the robot listens for to switch into "programming" mode.
+The first three "words" are CRY CYM CRW followed by a sequence of encoded bytes and finally by CMW. These framing words starting with cyan (C) decode to values outside of a single byte range (hex 130, 140, 12E and 14E). Everything between however seems to always decode to bytes. We will consider this a "framing" protocol; just a sequence the robot listens for to switch into "programming" mode.
 
 ### Envelope
 
@@ -81,7 +83,7 @@ Giving a version, length and checksum. Bytes within this "envelope" are program 
 
 `XX`, `YY` and `ZZ` have to do with the length of the program.
 
-Not fully understood yet, but `ZZ` (perhaps combined with `YY`) appears to be the length of the program instructions (up to the checksum). `XX` is, for some reason that's still a mystery, always 219-length. `YY` has only been observed to be zero, but likely it's the high bits of `ZZ` when programs longer than 255 (`FF`) are sent.
+It's not fully understood yet, but `ZZ` (probably combined with `YY`) appears to be the length of the program instructions (up to the checksum). `XX` is, for some reason that's still a mystery, always 219-length. `YY` has only been observed to be zero, but likely it's the high bits of `ZZ` when programs longer than 255 (`FF`) are sent.
 
 #### Checksum
 
