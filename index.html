@@ -61,7 +61,14 @@
 
             function mwhile(asm) { // while .. do .. loop
                 compilerStack.push(asm.length); // mark beginning of predicate
-                compilerStack.push(0); // indicate `while`
+            }
+
+            function mcontinue(asm) { // forever .. continue
+                var addr = compilerStack.pop();
+                asm.push(0xba); // jump
+                var back = asm.length - addr - 1;
+                asm.push((~back + 1) & 0xff); // relative back
+                asm.push(0x97); // unknown purpose
             }
 
             function mendwhile(asm) { // while .. do .. loop
@@ -91,7 +98,6 @@
                 asm.push(0);    // 0
                 asm.push(0x9c); // >=
                 mdo(asm);       // do
-                compilerStack.push(2); // indicate `repeat`
             }
 
             function mendrepeat(asm) { // repeat .. loop
@@ -101,6 +107,7 @@
 
             function mdo(asm) {
                 mif(asm); // `do` is really just another word for `if`, but would look weird in while loops
+                compilerStack.push(0); // indicate `while .. do`
             }
 
             function mloop(asm) {
@@ -111,9 +118,6 @@
                         break;
                     case 1: // forever
                         mendforever(asm);
-                        break;
-                    case 2: // repeat
-                        mendrepeat(asm);
                         break;
                     default: throw 'Unknown loop kind: ' + kind;
                 }
@@ -134,69 +138,72 @@
                 asm.push(0x8a); // not
             }
 
-            var dictionary  = {
-            'TRUE'    : { op: 1   , sig: '-1'   , help: 'True constant' },
-            'FALSE'   : { op: 0   , sig: '-0'   , help: 'False constant' },
-            '~'       : { op: 0x83, sig: 'x-x'  , help: 'Bitwise not value' },
-            '+'       : { op: 0x85, sig: 'yx-z' , help: 'Addition (x + y)' },
-            '-'       : { op: 0x86, sig: 'yx-z' , help: 'Subtraction (x - y)' },
-            '*'       : { op: 0x87, sig: 'yx-z' , help: 'Multiplication (x * y)' },
-            '/'       : { op: 0x88, sig: 'yx-z' , help: 'Division (x / y)' },
-            'mod'     : { op: 0x89, sig: 'yx-z' , help: 'Modulus (x mod y)' },
-            'not': { op: 0x8a, sig: 'x-x', help: 'Boolean not value' },
-            'neg': { op: 0x8b, sig: 'x-x', help: 'Negate value (e.g. used to generate negative literals)' },
-            'rand'    : { op: 0x8c, sig: 'mn-r' , help: 'Random number from n to m' },
-            'dup'     : { op: 0x94, sig: 'x-xx' , help: 'Duplicate top stack value' },
-            'drop'    : { op: 0x96, sig: 'x-'   , help: 'Drop top stack value' },
-            'turn'    : { op: 0x98, sig: 'as-'  , help: 'Turn angle (deg)/speed (mm/s)' },
-            'wait'    : { op: 0x9b, sig: 'x'    , help: 'Wait x centiseconds (x * 10ms)' },
-            '>='      : { op: 0x9c, sig: 'yx-b' , help: 'Greater than or equal (y >= x)' },
-            '>'       : { op: 0x9d, sig: 'yx-b' , help: 'Greater than (y > x)' },
-            '<'       : { macro: mlt, sig: 'yx-b', help: 'Less than (y < x)' },
-            '<='      : { macro: mleq, sig: 'yx-b', help: 'Less than or equal (y <= x)' },
-            'move'    : { op: 0x9e, sig: 'ds-'  , help: 'Move distance (mm, negative for reverse)/speed (mm/s)' },
-            'wheels'  : { op: 0x9f, sig: 'lr-'  , help: 'Set left/right wheel speeds (mm/s, negative for reverse)' },
-            'and'     : { op: 0xa2, sig: 'yx-b' , help: 'Boolean `and`' },
-            'or'      : { op: 0xa3, sig: 'yx-b' , help: 'Boolean `or`' },
-            '='       : { op: 0xa4, sig: 'yx-b' , help: 'Equality (y = x)' },
-            'pick'    : { op: 0xa5, sig: 'a-v'  , help: 'Pick value from caller\'s stack' },
-            'put'     : { op: 0xa6, sig: 'va-'  , help: 'Push value to caller\'s stack' },
-            'pop'     : { op: 0xa7, sig: 'n-'   , help: 'Drop n values from caller\'s stack' },
-            '<>'      : { macro: mneq, sig: 'yx-b', help: 'Inequality (y <> x)' },
-            'abs'     : { op: 0xa8, sig: 'x-x'  , help: 'Absolute value' },
-            'end'     : { op: 0xae, sig: 'm-'   , help: 'End program and switch to mode `m` (see `OFF`, `LINE`, `IDLE`)' },
-            'OFF'     : { op: 0   , sig: '-0'   , help: 'Switch robot off. Argument to `end`' },
-            'FOLLOW'  : { op: 1   , sig: '-1'   , help: 'Switch to line following. Argument to `end`' },
-            'IDLE'    : { op: 2   , sig: '-2'   , help: 'Switch to idle. Argument to `end`' },
-            'led'     : { op: 0xb8, sig: 'rgb'  , help: 'Set R, G, B values (0-127)' },
-            ';'       : { op: 0x91, sig: '-'    , help: 'End of definition `:foo ... ;`' },
-            'sensor'  : { op: 0x92, sig: 's-v'  , help: 'Get sensor value (same as `get`)' },
-            'get'     : { op: 0x92, sig: 'a-v'  , help: 'Get variable value (same as `sensor`)' },
-            'set'     : { op: 0x93, sig: 'va-'  , help: 'Set variable value' },
-            'COLOR'   : { op: 14  , sig: '-14'  , help: 'Color sensor constant (14). Used with `sensor` word)' },
-            'BLACK'   : { op: 0   , sig: '-0'   , help: 'Color constant (0). Used with `COLOR sensor`)' },
-            'RED'     : { op: 1   , sig: '-1'   , help: 'Color constant (1). Used with `COLOR sensor`)' },
-            'GREEN'   : { op: 2   , sig: '-2'   , help: 'Color constant (2). Used with `COLOR sensor`)' },
-            'YELLOW'  : { op: 3   , sig: '-3'   , help: 'Color constant (3). Used with `COLOR sensor`)' },
-            'BLUE'    : { op: 4   , sig: '-4'   , help: 'Color constant (4). Used with `COLOR sensor`)' },
-            'MAGENTA' : { op: 5   , sig: '-5'   , help: 'Color constant (5). Used with `COLOR sensor`)' },
-            'CYAN'    : { op: 6   , sig: '-6'   , help: 'Color constant (6). Used with `COLOR sensor`)' },
-            'WHITE'   : { op: 7   , sig: '-7'   , help: 'Color constant (7). Used with `COLOR sensor`)' },
-            'LINE'    : { op: 10  , sig: '-10'  , help: 'Line sensor constant (10). Used with `sensor` word)' },
-            'STRAIGHT': { op: 1   , sig: '-1'   , help: 'Straight line sensed. Used with `LINE sensor`' },
-            'LEFT'    : { op: 2   , sig: '-2'   , help: 'Straight line sensed. Used with `LINE sensor`' },
-            'RIGHT'   : { op: 4   , sig: '-4'   , help: 'Straight line sensed. Used with `LINE sensor`' },
-            'END'     : { op: 8   , sig: '-8'   , help: 'Straight line sensed. Used with `LINE sensor`' },
-            'BACK'    : { op: 8   , sig: '-8'   , help: 'Direction constant (8)' },
-            'if'      : { macro: mif      , sig: 'b-', help: 'Begin conditional block. [predicate] `if`' },
-            'else'    : { macro: melse    , sig: 'b-', help: 'Conditional `else` clause. [predicate] `if` ... `else` ... `then`' },
-            'then'    : { macro: mthen    , sig: 'b-', help: 'End conditional block (think of as "... and `then` do ..." [predicate] `if` ... `then` or [predicate] `if` ... `else` ... `then`' },
-            'while'   : { macro: mwhile   , sig: 'b-', help: 'Begin conditional loop predicate. `while` [predicate] `do` ... `loop`' },
-            'do'      : { macro: mdo      , sig: '-' , help: 'Begin conditional loop body. <predicate> `while` [predicate] `do` ... `loop`' },
-            'repeat'  : { macro: mrepeat  , sig: '-' , help: 'Begin repeat loopi, `N repeat .. loop`' },
-            'forever' : { macro: mforever , sig: '-' , help: 'Begin infinite loop. `forever .. loop`' },
-            'loop'    : { macro: mloop    , sig: '-' , help: 'End conditional loop. <predicate> `while` [predicate] `do` ... `loop`' },
+            function initDictionary() { return {
+                'TRUE': { op: 1, sig: '-1', help: 'True constant' },
+                'FALSE': { op: 0, sig: '-0', help: 'False constant' },
+                '~': { op: 0x83, sig: 'x-x', help: 'Bitwise not value' },
+                '+': { op: 0x85, sig: 'yx-z', help: 'Addition (x + y)' },
+                '-': { op: 0x86, sig: 'yx-z', help: 'Subtraction (x - y)' },
+                '*': { op: 0x87, sig: 'yx-z', help: 'Multiplication (x * y)' },
+                '/': { op: 0x88, sig: 'yx-z', help: 'Division (x / y)' },
+                'mod': { op: 0x89, sig: 'yx-z', help: 'Modulus (x mod y)' },
+                'not': { op: 0x8a, sig: 'x-x', help: 'Boolean not value' },
+                'neg': { op: 0x8b, sig: 'x-x', help: 'Negate value (e.g. used to generate negative literals)' },
+                'rand': { op: 0x8c, sig: 'mn-r', help: 'Random number from n to m' },
+                'dup': { op: 0x94, sig: 'x-xx', help: 'Duplicate top stack value' },
+                'drop': { op: 0x96, sig: 'x-', help: 'Drop top stack value' },
+                'turn': { op: 0x98, sig: 'as-', help: 'Turn angle (deg)/speed (mm/s)' },
+                'wait': { op: 0x9b, sig: 'x', help: 'Wait x centiseconds (x * 10ms)' },
+                '>=': { op: 0x9c, sig: 'yx-b', help: 'Greater than or equal (y >= x)' },
+                '>': { op: 0x9d, sig: 'yx-b', help: 'Greater than (y > x)' },
+                '<': { macro: mlt, sig: 'yx-b', help: 'Less than (y < x)' },
+                '<=': { macro: mleq, sig: 'yx-b', help: 'Less than or equal (y <= x)' },
+                'move': { op: 0x9e, sig: 'ds-', help: 'Move distance (mm, negative for reverse)/speed (mm/s)' },
+                'wheels': { op: 0x9f, sig: 'lr-', help: 'Set left/right wheel speeds (mm/s, negative for reverse)' },
+                'and': { op: 0xa2, sig: 'yx-b', help: 'Boolean `and`' },
+                'or': { op: 0xa3, sig: 'yx-b', help: 'Boolean `or`' },
+                '=': { op: 0xa4, sig: 'yx-b', help: 'Equality (y = x)' },
+                'pick': { op: 0xa5, sig: 'a-v', help: 'Pick value from caller\'s stack' },
+                'put': { op: 0xa6, sig: 'va-', help: 'Push value to caller\'s stack' },
+                'pop': { op: 0xa7, sig: 'n-', help: 'Drop n values from caller\'s stack' },
+                '<>': { macro: mneq, sig: 'yx-b', help: 'Inequality (y <> x)' },
+                'abs': { op: 0xa8, sig: 'x-x', help: 'Absolute value' },
+                'end': { op: 0xae, sig: 'm-', help: 'End program and switch to mode `m` (see `OFF`, `LINE`, `IDLE`)' },
+                'OFF': { op: 0, sig: '-0', help: 'Switch robot off. Argument to `end`' },
+                'FOLLOW': { op: 1, sig: '-1', help: 'Switch to line following. Argument to `end`' },
+                'IDLE': { op: 2, sig: '-2', help: 'Switch to idle. Argument to `end`' },
+                'led': { op: 0xb8, sig: 'rgb', help: 'Set R, G, B values (0-127)' },
+                ';': { op: 0x91, sig: '-', help: 'End of definition `:foo ... ;`' },
+                'sensor': { op: 0x92, sig: 's-v', help: 'Get sensor value (same as `get`)' },
+                'get': { op: 0x92, sig: 'a-v', help: 'Get variable value (same as `sensor`)' },
+                'set': { op: 0x93, sig: 'va-', help: 'Set variable value' },
+                'COLOR': { op: 14, sig: '-14', help: 'Color sensor constant (14). Used with `sensor` word)' },
+                'BLACK': { op: 0, sig: '-0', help: 'Color constant (0). Used with `COLOR sensor`)' },
+                'RED': { op: 1, sig: '-1', help: 'Color constant (1). Used with `COLOR sensor`)' },
+                'GREEN': { op: 2, sig: '-2', help: 'Color constant (2). Used with `COLOR sensor`)' },
+                'YELLOW': { op: 3, sig: '-3', help: 'Color constant (3). Used with `COLOR sensor`)' },
+                'BLUE': { op: 4, sig: '-4', help: 'Color constant (4). Used with `COLOR sensor`)' },
+                'MAGENTA': { op: 5, sig: '-5', help: 'Color constant (5). Used with `COLOR sensor`)' },
+                'CYAN': { op: 6, sig: '-6', help: 'Color constant (6). Used with `COLOR sensor`)' },
+                'WHITE': { op: 7, sig: '-7', help: 'Color constant (7). Used with `COLOR sensor`)' },
+                'LINE': { op: 10, sig: '-10', help: 'Line sensor constant (10). Used with `sensor` word)' },
+                'STRAIGHT': { op: 1, sig: '-1', help: 'Straight line sensed. Used with `LINE sensor`' },
+                'LEFT': { op: 2, sig: '-2', help: 'Straight line sensed. Used with `LINE sensor`' },
+                'RIGHT': { op: 4, sig: '-4', help: 'Straight line sensed. Used with `LINE sensor`' },
+                'END': { op: 8, sig: '-8', help: 'Straight line sensed. Used with `LINE sensor`' },
+                'BACK': { op: 8, sig: '-8', help: 'Direction constant (8)' },
+                'if': { macro: mif, sig: 'b-', help: 'Begin conditional block. [predicate] `if`' },
+                'else': { macro: melse, sig: 'b-', help: 'Conditional `else` clause. [predicate] `if` ... `else` ... `then`' },
+                'then': { macro: mthen, sig: 'b-', help: 'End conditional block (think of as "... and `then` do ..." [predicate] `if` ... `then` or [predicate] `if` ... `else` ... `then`' },
+                'while': { macro: mwhile, sig: 'b-', help: 'Begin conditional loop predicate. `while` [predicate] `do` ... `loop`' },
+                'do': { macro: mdo, sig: '-', help: 'Begin conditional loop body. <predicate> `while` [predicate] `do` ... `loop`' },
+                'repeat': { macro: mrepeat, sig: '-', help: 'Begin repeat loopi, `N repeat .. loop`' },
+                'forever': { macro: mforever, sig: '-', help: 'Begin infinite loop. `forever .. loop`' },
+                'loop': { macro: mloop, sig: '-', help: 'End conditional loop. <predicate> `while` [predicate] `do` ... `loop`' },
             };
+        }
+
+        dictionary = initDictionary();
 
         function updateCodeHtml(html) {
             // TODO: update in place (but this breaks cursor movement)
@@ -243,9 +250,7 @@
                 if (hasDefs) {
                     asm.push(0xba); // jump
                     asm.push(0); // placeholder
-                    for (var d in dictionary) {
-                        if (dictionary[d].user) delete dictionary[d];
-                    }
+                    dictionary = initDictionary();
                 }
                 for (var l in lines) {
                     var line = lines[l];
@@ -490,6 +495,9 @@
                             </li>
                             <li>
                                 <a href="javascript:sample('forever<br />COLOR sensor 0 = if   0   0   0 then<br />COLOR sensor 1 = if 127   0   0 then<br />COLOR sensor 2 = if   0 127   0 then<br />COLOR sensor 3 = if 127 127   0 then<br />COLOR sensor 4 = if   0   0 127 then<br />COLOR sensor 5 = if 127   0 127 then<br />COLOR sensor 6 = if   0 127 127 then<br />COLOR sensor 7 = if 127 127 127 then<br />led 20 wait<br />loop')">Chameleon</a><br />LED mimics surface color sensor
+                            </li>
+                            <li>
+                                <a href="javascript:sample(':pause 50 wait ;<br />:left 90 127 turn ;<br />:around left left ;<br />:arc wheels pause ;<br />:half 127 64 arc 64 127 arc ;<br />:full half around half ;<br />pause 18 repeat full 20 127 turn loop OFF end')">Flower</a><br />Trace out 18 flower petals.
                             </li>
                         </ul>
                     </div>
