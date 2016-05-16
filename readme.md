@@ -291,19 +291,35 @@ So the two functions are packed at the end (`7f 00 00 led ;` and `00 7f 00 led ;
 
 #### Parameter Passing
 
-    03 02 01 call 00 0d 03 pop 00 end 00 a5 01 a5 02 a5 led ;
+    3 2 1 call 00 0d 3 pop OFF end 0 pick 1 pick 2 pick led ;
+
+The architecture is a strange one. Rather than just allow the stack to be shared across functions, there are instructions to `pick` from, `put` to and `pop` from the caller's stack frame. Why are there stack frames at all? I don't know...
+
+In the above, `3` `2` `1` literals are pushed to the stack followed by a `call` to a function (`000d`). The function being called `pick`s these values from the caller's stack frame. In this case, they're being `pick`ed in the same order that they were already on the stack. Normally, stack machines have operations such a `swap`, `over`, etc. to manipulate the order. In the case of Ozobot, you're free to reach in and `pick` in whatever order you like. The argument to `pick` is the stack depth (e.g. `0` for the top, `1` for the second value, etc.). Upon returning, the original literals are still on the stack (not consumed by `pick`) and so `3 pop` discards them. Note that `pop` takes an argument indicating how many values to discard, while `drop` always discards one. That is, `1 pop` is equivalent to `drop`.
+
+It turns out that Ozobot doesn't appear to use the stack frame for return addresses and such; only data. That is good design, although I don't know what's up with all the `pick`, `put`, `pop` stuff. This program would also work:
+
+    3 2 1 call 00 0d OFF end led ;
+
+The literals left by the caller are already in the correct order for `led` in the the callee to use. They're *consumed* and so `3 pop` is also not needed. In the case of arguments being out of order, it may be necessary to use `pick` as we've not yet discovered a `swap`, `roll`, or other stack manipulation primitives.
 
 #### Return Values
 
-    03 02 01 call 00 0f 02 pop 25 93 00 end 00 peek 01 peek 02 peek led 40 02 push ;
+Return values are weird no matter what you do. A _normal_ stack machine would allow for return values to simple be left on the stack for callers to use. It seems that Ozobot has some kind of stack frames and enforces this by resetting the top-of-stack pointer upon return (`;`).
 
-The `If P return X` form in OzoBlockly embeds: `P if 07 97 X 02 push ;` // TODO: figure out what `97` is for
+Here is the same program, only with the function returning `7`.
+
+    3 2 1 call 00 0d 2 pop OFF end 0 pick 1 pick 2 pick led 7 2 put ;
+
+What is happening here is `3` `2` `1` are placed on the stack, the function is called. These values are `pick`ed to the callee's stack frame (in the same order; could have been simplified). The callee consumes these with `led`. Finally, a `7` is pushed to the stack, but we cannot simply return because the top-of-stack pointer will be reset and the caller won't have access to this. So, the `7` is `put` into the third (`2`) value of the caller's stackframe. Upon returning, the top two (`2`) values are `pop`ped to discard them, leaving the returned value on top.
+
+I really wish there were a way around this top-of-stack reset. It's preventing simple returns. In fact, when calling a function taking no arguments and returning something, you have to push a dummy value to your stack for the callee to `put` into. Very strange and limiting calling convention.
 
 ## Interesting Programs
 
 `zigzag`:
 
-    01 03 >= 00 3f 2d 24 set 2d call 00 0a drop 00 end 2c ~ 00 peek turn 0a 00 peek move 02 dup 00 > if 19 97 5a 00 peek turn 14 00 peek move 59 ~ 00 peek turn 14 00 peek move 01 - jump e7 97 drop 5a 00 peek turn 0a 00 peek move 2c ~ 00 peek turn ; 
+    01 03 >= 00 3f 2d 24 set 2d call 00 0a drop 00 end 2c ~ 00 pick turn 0a 00 pick move 02 dup 00 > if 19 97 5a 00 pick turn 14 00 pick move 59 ~ 00 pick turn 14 00 pick move 01 - jump e7 97 drop 5a 00 pick turn 0a 00 pick move 2c ~ 00 pick turn ; 
 
 ## Bytecodes
 
@@ -346,8 +362,8 @@ The `If P return X` form in OzoBlockly embeds: `P if 07 97 X 02 push ;` // TODO:
 | 0xa2 | and        |                                       |
 | 0xa3 | or         |                                       |
 | 0xa4 | =          |                                       |
-| 0xa5 | peek       |                                       |
-| 0xa6 | push       |                                       |
+| 0xa5 | pick       |                                       |
+| 0xa6 | put        |                                       |
 | 0xa7 | pop        |                                       |
 | 0xa8 | abs        |                                       |
 | 0xa9 | ?          |                                       |

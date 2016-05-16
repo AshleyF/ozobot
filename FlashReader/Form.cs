@@ -10,7 +10,7 @@ namespace FlashReader
     {
         private Color Sample()
         {
-            const int factor = 1; // 2 for MacBook TODO: API to get this?
+            const int factor = 2; // 2 for MacBook TODO: API to get this?
             var point = PointToScreen(new Point(pictureBox.Left + pictureBox.Width / 2, pictureBox.Top + pictureBox.Height / 2));
             var screen = Screen.FromPoint(point);
             var bmp = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
@@ -121,8 +121,8 @@ namespace FlashReader
                             case 0xa2: dasm += "and "   ; break;
                             case 0xa3: dasm += "or "    ; break;
                             case 0xa4: dasm += "= "     ; break;
-                            case 0xa5: dasm += "peek "  ; break;
-                            case 0xa6: dasm += "push "  ; break;
+                            case 0xa5: dasm += "pick "  ; break;
+                            case 0xa6: dasm += "put "   ; break;
                             case 0xa7: dasm += "pop "   ; break;
                             case 0xa8: dasm += "abs "   ; break; // *
 
