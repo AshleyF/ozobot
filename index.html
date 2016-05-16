@@ -31,6 +31,7 @@
             .word { color: #0f0; }
             .literal { color: yellow; }
             .error { color: red; }
+            .definition { color: magenta; }
             #panel_samples { text-align: left; }
             #panel_samples a { font-weight: bold; }
         </style>
@@ -165,6 +166,7 @@
             'FOLLOW'  : { op: 1   , sig: '-1'   , help: 'Switch to line following. Argument to `end`' },
             'IDLE'    : { op: 2   , sig: '-2'   , help: 'Switch to idle. Argument to `end`' },
             'led'     : { op: 0xb8, sig: 'rgb'  , help: 'Set R, G, B values (0-127)' },
+            ';'       : { op: 0x91, sig: '-'    , help: 'End of definition `:foo ... ;`' },
             'sensor'  : { op: 0x92, sig: 's-v'  , help: 'Get sensor value' },
             'COLOR'   : { op: 14  , sig: '-14'  , help: 'Color sensor constant (14). Used with `sensor` word)' },
             'BLACK'   : { op: 0   , sig: '-0'   , help: 'Color constant (0). Used with `COLOR sensor`)' },
@@ -218,6 +220,28 @@
             var asm = [];
             var lines = source.match(/[^\r\n]+/g);
             if (lines) {
+                var hasDefs = false;
+                for (var l in lines) {
+                    var line = lines[l];
+                    var words = line.match(/\S+/g);
+                    if (words) {
+                        for (var w = 0; w < words.length; w++) {
+                            var word = words[w];
+                            if (word[0] == ':' || word == ';') {
+                                hasDefs = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (hasDefs) break;
+                }
+                if (hasDefs) {
+                    asm.push(0xba); // jump
+                    asm.push(0); // placeholder
+                    for (var d in dictionary) {
+                        if (dictionary[d].user) delete dictionary[d];
+                    }
+                }
                 for (var l in lines) {
                     var line = lines[l];
                     var words = line.match(/\S+/g);
@@ -229,6 +253,27 @@
                                     addWord(words[j], 'comment');
                                 }
                                 break;
+                            }
+                            if (word[0] == ':') {
+                                var name = word.substr(1);
+                                addWord(name, 'definition');
+                                function create() {
+                                    var calladdr = asm.length;
+                                    function closure(asm) {
+                                        asm.push(0x90); // call
+                                        asm.push(calladdr >> 8);
+                                        asm.push(calladdr & 0xff);
+                                    }
+                                    return closure;
+                                }
+                                dictionary[name] = {
+                                    user: true,
+                                    macro: create()
+                                };
+                                continue;
+                            }
+                            if (word == ';') {
+                                asm[1] = asm.length + 1; // patch jump to after latest def
                             }
                             var i = parseInt(word);
                             if (!isNaN(i)) {
