@@ -431,6 +431,7 @@
             hide('load');
             hide('samples');
             hide('help');
+            hide('get');
         }
 
         function show(panel) {
@@ -462,10 +463,12 @@
                 <td id="tab_samples" class="tab" onclick="show('samples')">Samples</td>
                 <td class="spacer">&nbsp;</td>
                 <td id="tab_help" class="tab" onclick="show('help')">Help</td>
+                <td class="spacer">&nbsp;</td>
+                <td id="tab_get" class="tab" onclick="show('get')">Get&nbsp;it!</td>
                 <td class="spacer" width="100%">&nbsp;</td>
             </tr>
             <tr id="panelrow">
-                <td id="panels" colspan="9">
+                <td id="panels" colspan="11">
                     <div id="panel_code">
                         <div id="source" contenteditable="true" onkeyup="update()">
                             \ blink red, green, blue with 1 sec. pauses<br />
@@ -504,6 +507,12 @@
                     <div id="panel_help" style="display: none">
                         <h1>FlashForth Words</h1>
                         <table id="help" cellpadding="0" cellspacing="0"></table>
+                    </div>
+                    <div id="panel_get" style="display: none">
+			<iframe style="width:120px;height:240px;" marginwidth="0" marginheight="0" scrolling="no" frameborder="0" src="//ws-na.amazon-adsystem.com/widgets/q?ServiceVersion=20070822&OneJS=1&Operation=GetAdHtml&MarketPlace=US&source=ss&ref=as_ss_li_til&ad_type=product_link&tracking_id=comohafu-20&marketplace=amazon&region=US&placement=B015XJR4ME&asins=B015XJR4ME&linkId=cecf6d200f5ba55378d1e1a8a8e753d3&show_border=true&link_opens_in_new_window=true"></iframe>
+			<iframe style="width:120px;height:240px;" marginwidth="0" marginheight="0" scrolling="no" frameborder="0" src="//ws-na.amazon-adsystem.com/widgets/q?ServiceVersion=20070822&OneJS=1&Operation=GetAdHtml&MarketPlace=US&source=ss&ref=as_ss_li_til&ad_type=product_link&tracking_id=comohafu-20&marketplace=amazon&region=US&placement=B00ZYUND00&asins=B00ZYUND00&linkId=716aba0c178652ef60993591c800f66f&show_border=true&link_opens_in_new_window=true"></iframe>
+			<iframe style="width:120px;height:240px;" marginwidth="0" marginheight="0" scrolling="no" frameborder="0" src="//ws-na.amazon-adsystem.com/widgets/q?ServiceVersion=20070822&OneJS=1&Operation=GetAdHtml&MarketPlace=US&source=ss&ref=as_ss_li_til&ad_type=product_link&tracking_id=comohafu-20&marketplace=amazon&region=US&placement=B00ZYUFPRO&asins=B00ZYUFPRO&linkId=83309794c7cf70cb491098abd3b6e219&show_border=true&link_opens_in_new_window=true"></iframe>
+			<p>By the way, the Starter Pack version works with FlashForth without the "upgrade" required for OzoBlockly.</p>
                     </div>
                 </td>
             </tr>
