@@ -497,7 +497,7 @@
                                 <a href="javascript:sample('forever<br />127 -127 wheels<br />127 wait<br />-127 127 wheels<br />127 wait<br />loop')">Spin in place</a><br />Spin in place by reversing differential drive wheel speeds.
                             </li>
                             <li>
-                                <a href="javascript:sample('forever<br />COLOR sensor 0 = if   0   0   0 then<br />COLOR sensor 1 = if 127   0   0 then<br />COLOR sensor 2 = if   0 127   0 then<br />COLOR sensor 3 = if 127 127   0 then<br />COLOR sensor 4 = if   0   0 127 then<br />COLOR sensor 5 = if 127   0 127 then<br />COLOR sensor 6 = if   0 127 127 then<br />COLOR sensor 7 = if 127 127 127 then<br />led 20 wait<br />loop')">Chameleon</a><br />LED mimics surface color sensor
+                              <a href="javascript:sample('forever<br />COLOR sensor 0 = if   0   0   0 else<br />COLOR sensor 1 = if 127   0   0 else<br />COLOR sensor 2 = if   0 127   0 else<br />COLOR sensor 3 = if 127 127   0 else<br />COLOR sensor 4 = if   0   0 127 else<br />COLOR sensor 5 = if 127   0 127 else<br />COLOR sensor 6 = if   0 127 127 else<br />COLOR sensor 7 = if 127 127 127 else<br />0 0 0 then then then then then then then then<br />led 20 wait<br />loop')">Chameleon</a><br />LED mimics surface color sensor
                             </li>
                             <li>
                                 <a href="javascript:sample(':pause 50 wait ;<br />:left 90 127 turn ;<br />:around left left ;<br />:arc wheels pause ;<br />:half 127 64 arc 64 127 arc ;<br />:full half around half ;<br />pause 18 repeat full 20 127 turn loop OFF end')">Flower</a><br />Trace out 18 flower petals.
