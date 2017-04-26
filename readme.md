@@ -77,15 +77,17 @@ The bytes within frames appear to be in the form:
 
 Giving a version, length and checksum. Bytes within this "envelope" are program instructions.
 
+The Ozobot Bit seems to use `01 03`, while firmware 1.4 on Evo seems to use `01 07`.
+
 #### Version?
 
-`VV` and `UU` may be a version number? They have been observed to always be 1 and 3 currently.
+`VV` and `UU` may be a version number? They have been observed to be 1, 3 when loading the Bit and 1, 7 when loading the Evo currently.
 
 #### Length
 
 `XX`, `YY` and `ZZ` have to do with the length of the program.
 
-It's not fully understood yet, but `ZZ` (probably combined with `YY`) appears to be the length of the program instructions (up to the checksum). `XX` is, for some reason that's still a mystery, always 219-length. `YY` has only been observed to be zero, but likely it's the high bits of `ZZ` when programs longer than 255 (`FF`) are sent.
+It's not fully understood yet, but `ZZ` (probably combined with `YY`) appears to be the length of the program instructions (up to the checksum). `XX` is, for some reason that's still a mystery, always 219-length for Bit and 199-length for Evo. `YY` has only been observed to be zero, but likely it's the high bits of `ZZ` when programs longer than 255 (`FF`) are sent.
 
 #### Checksum
 
@@ -108,6 +110,16 @@ This program fragment blinks red, then green, then blue, with one-second pauses.
 #### Literals
 
 Values less than 128 are considered literals and pushed to the stack. Values of 128 or higher are instructions. You may notice that in OzoBlockly negative values are supported. This is done by emitting a *positive* value (one less than desired) followed by a `not` (`8b` hex) instruction. This gives a range of -128 to +127. FlashForth converts negative literals for you.
+
+## Differences with Evo
+
+OzoBlockly just (26 APR 2017) released flash codes for the Ozobot Evo. There seem to be some differenced in code generation.
+
+* Version number is `01 07` (seems to switch back to `01 03` for Bit)
+* The magic length value is `199` instead of `219` (see Length section above)
+* Mystery instructions - programs are prepended with `2d 28 set` (2d 28 93) for some reason (only for Evo)
+* Program ends with `03 end` (03 ae), while reverting to `00 end` for Bit.
+    * The known values for `end` are `00` = off, `01` = follow, `02` = idle. It's unknown what `03` does (seems to idle).
 
 ## OzoBlockly Decoded
 
@@ -171,6 +183,16 @@ Where `D` is `STRAIGHT` (1), `LEFT` (2), `RIGHT` (4), or `END` (8).
 
 `Set random light color` isn't primative: `7f 00 rand 7f 00 rand 7f 00 rand led`
 
+#### Lights on Evo
+
+Evo has some extra lights and a new instruction (`c9`) for setting them. Parameters appear to be an unknown value (observed to be `00`), a bit mask of which LEDs to control, followed by red, green, blue values. For example:
+
+    00 3f 7f 00 00 c9`
+
+This sets all LEDs to red.
+
+The bit mask appears to be in the form `00ABCDET` where `A`, `B`, `C`, `D` and `E` are the LEDs across the front and `T` is the top LED.
+
 ### Timing
 
 `Wait T x 10 ms` is `T wait`.
@@ -185,11 +207,12 @@ If both `S` and `T` are chosen, then it becomes a loop followed by another `wait
 
 ### Terminate
 
-`Terminate program and turn Ozobot off` is `00 end` (`00` = `OFF` in FlashForth)
+`Terminate program on Bit and turn Ozobot off` is `00 end` (`00` = `OFF` in FlashForth)
 
 `Terminate program and continue line following` is `01 end` (`01` = `FOLLOW` in FlashForth)
 
 `Terminate program and switch to idle` is `02 end` (`02` = `IDLE` in FLashForth)
+
 
 In `IDLE` mode, by the way, it is ready to accept a new program. If we can find a way to cause programs to execute without double pressing power then we could have a very nice, interactive experience with the Ozobot sitting on a tablet while being programmed from another tablet or laptop. Send a command and immediately see the result. Send another. And so on without load/run manual steps.
 
