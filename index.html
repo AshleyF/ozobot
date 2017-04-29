@@ -36,7 +36,15 @@
             #panel_samples a { font-weight: bold; }
         </style>
         <script>
+            var evoMode = false;
             var compilerStack = [];
+
+            function mevo(asm) { // switch to evo mode
+                evoMode = true;
+                asm.push(0x2d);
+                asm.push(0x28);
+                asm.push(0x93); // set (TODO: why? only for Evo)
+	    }
 
             function mif(asm) { // if .. [else] .. then
                 asm.push(0x80); // if
@@ -172,7 +180,8 @@
                 'OFF': { op: 0, sig: '-0', help: 'Switch robot off. Argument to `end`' },
                 'FOLLOW': { op: 1, sig: '-1', help: 'Switch to line following. Argument to `end`' },
                 'IDLE': { op: 2, sig: '-2', help: 'Switch to idle. Argument to `end`' },
-                'led': { op: 0xb8, sig: 'rgb', help: 'Set R, G, B values (0-127)' },
+                'led': { op: 0xb8, sig: 'rgb-', help: 'Set R, G, B values (0-127)' },
+                'evoLeds': { op: 0xc9, sig: 'xmrgb-', help: 'Set masked (m) LEDs to R, G, B values (0-127). Mask is 00ABCDET, where A, B, C, D and E are LEDs across the front and T is the top LED. First (x) parameter purpose is unknown (pass 0).' },
                 ';': { op: 0x91, sig: '-', help: 'End of definition `:foo ... ;`' },
                 'sensor': { op: 0x92, sig: 's-v', help: 'Get sensor value (same as `get`)' },
                 'get': { op: 0x92, sig: 'a-v', help: 'Get variable value (same as `sensor`)' },
@@ -192,6 +201,7 @@
                 'RIGHT': { op: 4, sig: '-4', help: 'Straight line sensed. Used with `LINE sensor`' },
                 'END': { op: 8, sig: '-8', help: 'Straight line sensed. Used with `LINE sensor`' },
                 'BACK': { op: 8, sig: '-8', help: 'Direction constant (8)' },
+                'evo': { macro: mevo, sig: '-', help: 'Switch to Evo move.' },
                 'if': { macro: mif, sig: 'b-', help: 'Begin conditional block. [predicate] `if`' },
                 'else': { macro: melse, sig: 'b-', help: 'Conditional `else` clause. [predicate] `if` ... `else` ... `then`' },
                 'then': { macro: mthen, sig: 'b-', help: 'End conditional block (think of as "... and `then` do ..." [predicate] `if` ... `then` or [predicate] `if` ... `else` ... `then`' },
@@ -224,6 +234,7 @@
         }
 
         function assemble(source) {
+            evoMode = false;
             var h = '';
             var id = 0;
             function addWord(word, cls, tip) {
@@ -347,9 +358,9 @@
                 }
                 return chk;
             }
-            var ver = [1, 3];
+            var ver = evoMode ? [1, 7] : [1, 3];
             var len = code.length;
-            var length = [219 - len, 0, len]; // TODO: why?
+            var length = [(evoMode ? 199 : 219) - len, 0, len]; // TODO: why?
             var pre = ver.concat(length, code);
             var chk = checksum(pre);
             var framed = [304, 320, 302].concat(pre, chk, 334);
