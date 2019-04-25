@@ -8,6 +8,8 @@ This is a pretty cool little line-follower. They publish the ["Static Codes", bu
 
 FlashForth is my first cut at a simple programming "IDE" [available here](http://ashleyf.github.io/ozobot). Have fun!
 
+Another very cool project is [Kaarel94's Python-like language for Ozobot!](https://github.com/Kaarel94/Ozobot-Python)
+
 Many "Words" in FlashForth correspond directly with Ozobot instructions (see Bytecodes section below). Some words though are macros. These are mainly to construct control structure without having to think about addresses and such.
 
 For example the FlashForth construct `while` ... `do` ... `loop` translates into conditional and unconditional branches to relative addresses.
